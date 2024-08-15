@@ -47,6 +47,8 @@ pub struct DBConfig {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Config {
+    /// Server configuration
+    pub server: ServerConfig,
     /// Logging configuration
     pub logging: LoggingConfig,
 }
