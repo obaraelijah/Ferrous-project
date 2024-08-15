@@ -16,8 +16,8 @@ use webauthn_rs::prelude::{Url, WebauthnError};
 use webauthn_rs::WebauthnBuilder;
 
 use crate::api::handler;
+use crate::api::middleware::{handle_not_found, json_extractor_error};
 use crate::config::Config;
-use crate::api::middleware::handle_not_found;
 
 const ORIGIN_NAME: &str = "ferrous";
 
@@ -44,7 +44,7 @@ pub(crate) async fn start_server(db: Database, config: &Config) -> Result<(), St
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(db.clone()))
-            .app_data(JsonConfig::default())
+            .app_data(JsonConfig::default().error_handler(json_extractor_error))
             .app_data(PayloadConfig::default())
             .app_data(webauthn.clone())
             .wrap(setup_logging_mw(LoggingMiddlewareConfig::default()))
