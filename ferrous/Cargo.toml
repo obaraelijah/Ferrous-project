@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Elijah Obara <elijahobara@samson.dev>"]
 license = "MPL-2.0"
 repository = "https://github.com/obaraelijah/Ferrous-project"
+description = "The core component of Ferrous-project"
 
 [dependencies]
 # Webframework

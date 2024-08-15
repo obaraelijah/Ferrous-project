@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Elijah Obara <elijahobara@samson.dev>"]
 license = "MPL-2.0"
 repository = "https://github.com/obaraelijah/Ferrous-project"
-
+description = "The worker component of Ferrous-project"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
