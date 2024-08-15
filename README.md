@@ -1,7 +1,5 @@
 # The Ferrous-project
 
-[!LICENSE](https://img.shields.io/github/license/obaraelijah/Ferrous-project?color=blue)](LICENSE)
-
 ---
 The aim of this project is to create a fast, scalable pentesting platform.
 
