@@ -1,4 +1,6 @@
-workspace.members = [
-    "./Ferrous",
+[workspace]
+members = [
+    "./ferrous",
+    "./leech",
 ]
 resolver = "2"
