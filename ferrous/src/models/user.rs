@@ -6,6 +6,7 @@ pub struct User {
     /// Primary key of the user, a uuid v4
     #[rorm(primary_key)]
     pub uuid: Vec<u8>,
+
     /// The username is used for login
     #[rorm(max_length = 255, unique)]
     pub username: String,
