@@ -15,6 +15,7 @@ pub(crate) type ApiResult<T> = Result<T, ApiError>;
 #[repr(u16)]
 enum ApiStatusCode {
     LoginFailed = 1000,
+    NotFound = 1001,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -38,6 +39,7 @@ impl ApiErrorResponse {
 #[derive(Debug)]
 pub(crate) enum ApiError {
     LoginFailed,
+    NotFound,
     Database(rorm::Error),
     InvalidHash(argon2::password_hash::Error),
     SessionInsert(actix_session::SessionInsertError),
@@ -53,6 +55,7 @@ impl std::fmt::Display for ApiError {
             ApiError::SessionInsert(_) | ApiError::SessionGet(_) => {
                 write!(f, "Session error occurred")
             }
+            ApiError::NotFound => write!(f, "Not found"),
         }
     }
 }
@@ -100,6 +103,10 @@ impl actix_web::ResponseError for ApiError {
                     self.to_string(),
                 ))
             }
+            ApiError::NotFound => HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                ApiStatusCode::NotFound,
+                self.to_string(),
+            )),
         }
     }
 }
