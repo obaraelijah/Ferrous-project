@@ -1,4 +1,4 @@
-# The Ferrous-project
+# :octopus: The Ferrous-project :octopus:
 
 ---
 The aim of this project is to create a fast, scalable pentesting platform.
