@@ -1,6 +1,8 @@
 # :octopus: The Ferrous-project :octopus:
 
 ---
+![ferrous](./assets/ferrous.png)
+
 The aim of this project is to create a fast, scalable pentesting platform.
 
 It integrates existing tools as well as provides own implementations 
