@@ -1,7 +1,7 @@
 use actix_toolbox::tb_middleware::actix_session;
 use actix_web::body::BoxBody;
 use actix_web::HttpResponse;
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use serde::Serialize;
 use serde_repr::Serialize_repr;
 
@@ -19,6 +19,9 @@ enum ApiStatusCode {
     InvalidContentType = 1002,
     InvalidJson = 1003,
     PayloadOverflow = 1004,
+    Unauthenticated = 1005,
+    Missing2fa = 1006,
+    MissingPrivileges = 1007,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -47,17 +50,21 @@ pub(crate) enum ApiError {
     InvalidJson(serde_json::Error),
     PayloadOverflow(String),
     InternalServerError,
-    Database(rorm::Error),
+    DatabaseError(rorm::Error),
     InvalidHash(argon2::password_hash::Error),
     SessionInsert(actix_session::SessionInsertError),
     SessionGet(actix_session::SessionGetError),
+    Unauthenticated,
+    Missing2FA,
+    SessionCorrupt,
+    MissingPrivileges,
 }
 
 impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ApiError::LoginFailed => write!(f, "Login failed"),
-            ApiError::Database(_) => write!(f, "Database error occurred"),
+            ApiError::DatabaseError(_) => write!(f, "Database error occurred"),
             ApiError::InvalidHash(_) | ApiError::InternalServerError => {
                 write!(f, "Internal server error")
             }
@@ -68,6 +75,10 @@ impl std::fmt::Display for ApiError {
             ApiError::InvalidContentType => write!(f, "Content type error"),
             ApiError::InvalidJson(err) => write!(f, "Json error: {err}"),
             ApiError::PayloadOverflow(err) => write!(f, "{err}"),
+            ApiError::Unauthenticated => write!(f, "Unauthenticated"),
+            ApiError::Missing2FA => write!(f, "2FA is missing"),
+            ApiError::SessionCorrupt => write!(f, "Corrupt session"),
+            ApiError::MissingPrivileges => write!(f, "You are missing privileges"),
         }
     }
 }
@@ -83,7 +94,7 @@ impl actix_web::ResponseError for ApiError {
                     self.to_string(),
                 ))
             }
-            ApiError::Database(err) => {
+            ApiError::DatabaseError(err) => {
                 error!("Database error occurred: {err}");
 
                 HttpResponse::InternalServerError().json(ApiErrorResponse::new(
@@ -142,6 +153,38 @@ impl actix_web::ResponseError for ApiError {
                     self.to_string(),
                 ))
             }
+            ApiError::Unauthenticated => {
+                trace!("Unauthenticated");
+
+                HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                    ApiStatusCode::Unauthenticated,
+                    self.to_string(),
+                ))
+            }
+            ApiError::Missing2FA => {
+                trace!("Missing 2fa");
+
+                HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                    ApiStatusCode::Missing2fa,
+                    self.to_string(),
+                ))
+            }
+            ApiError::SessionCorrupt => {
+                warn!("Corrupt session");
+
+                HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                    ApiStatusCode::SessionError,
+                    self.to_string(),
+                ))
+            }
+            ApiError::MissingPrivileges => {
+                trace!("Missing privileges");
+
+                HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                    ApiStatusCode::MissingPrivileges,
+                    self.to_string(),
+                ))
+            }
         }
     }
 }
@@ -149,7 +192,7 @@ impl actix_web::ResponseError for ApiError {
 
 impl From<rorm::Error> for ApiError {
     fn from(value: rorm::Error) -> Self {
-        Self::Database(value)
+        Self::DatabaseError(value)
     }
 }
 
