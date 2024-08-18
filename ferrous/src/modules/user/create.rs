@@ -68,7 +68,7 @@ pub async fn create_user<'db>(
         .to_string();
 
     let uuid = Uuid::new_v4();
- 
+
     insert!(db, UserInsert)
         .transaction(tx)
         .single(&UserInsert {

@@ -9,6 +9,7 @@ use webauthn_rs::prelude::WebauthnError;
 pub(crate) use crate::api::handler::auth::*;
 pub(crate) use crate::api::handler::user::*;
 use crate::modules::user::create::CreateUserError;
+use crate::modules::user::delete::DeleteUserError;
 
 mod auth;
 mod user;
@@ -28,6 +29,7 @@ enum ApiStatusCode {
     MissingPrivileges = 1007,
     NoSecurityKeyAvailable = 1008,
     UserAlreadyExists = 1009,
+    InvalidUsername = 1010,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -68,6 +70,7 @@ pub(crate) enum ApiError {
     NoSecurityKeyAvailable,
     Webauthn(WebauthnError),
     UserAlreadyExists,
+    InvalidUsername,
 }
 
 impl std::fmt::Display for ApiError {
@@ -92,6 +95,7 @@ impl std::fmt::Display for ApiError {
             ApiError::NoSecurityKeyAvailable => write!(f, "No security key available"),
             ApiError::Webauthn(_) => write!(f, "Webauthn error"),
             ApiError::UserAlreadyExists => write!(f, "User already exists"),
+            ApiError::InvalidUsername => write!(f, "Invalid username"),
         }
     }
 }
@@ -218,6 +222,10 @@ impl actix_web::ResponseError for ApiError {
                 ApiStatusCode::UserAlreadyExists,
                 self.to_string(),
             )),
+            ApiError::InvalidUsername => HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                ApiStatusCode::InvalidUsername,
+                self.to_string(),
+            )),
         }
     }
 }
@@ -252,6 +260,15 @@ impl From<CreateUserError> for ApiError {
             CreateUserError::DatabaseError(err) => Self::DatabaseError(err),
             CreateUserError::UsernameAlreadyExists => Self::UserAlreadyExists,
             CreateUserError::HashError(err) => Self::InvalidHash(err),
+        }
+    }
+}
+
+impl From<DeleteUserError> for ApiError {
+    fn from(value: DeleteUserError) -> Self {
+        match value {
+            DeleteUserError::DatabaseError(err) => Self::DatabaseError(err),
+            DeleteUserError::InvalidUsername => Self::InvalidUsername,
         }
     }
 }
