@@ -7,12 +7,14 @@ use serde_repr::Serialize_repr;
 use webauthn_rs::prelude::WebauthnError;
 
 pub(crate) use crate::api::handler::auth::*;
+pub(crate) use crate::api::handler::leeches::*;
 pub(crate) use crate::api::handler::users::*;
 use crate::modules::user::create::CreateUserError;
 use crate::modules::user::delete::DeleteUserError;
 
 mod auth;
 mod users;
+mod leeches;
 
 pub(crate) type ApiResult<T> = Result<T, ApiError>;
 
@@ -30,6 +32,9 @@ enum ApiStatusCode {
     NoSecurityKeyAvailable = 1008,
     UserAlreadyExists = 1009,
     InvalidUsername = 1010,
+    InvalidAddress = 1011,
+    AddressAlreadyExists = 1012,
+    NameAlreadyExists = 1013,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -71,6 +76,9 @@ pub(crate) enum ApiError {
     Webauthn(WebauthnError),
     UserAlreadyExists,
     InvalidUsername,
+    InvalidAddress,
+    AddressAlreadyExists,
+    NameAlreadyExists,
 }
 
 impl std::fmt::Display for ApiError {
@@ -96,6 +104,9 @@ impl std::fmt::Display for ApiError {
             ApiError::Webauthn(_) => write!(f, "Webauthn error"),
             ApiError::UserAlreadyExists => write!(f, "User already exists"),
             ApiError::InvalidUsername => write!(f, "Invalid username"),
+            ApiError::InvalidAddress => write!(f, "Invalid address"),
+            ApiError::AddressAlreadyExists => write!(f, "Address already exists"),
+            ApiError::NameAlreadyExists => write!(f, "Name already exists"),
         }
     }
 }
@@ -224,6 +235,17 @@ impl actix_web::ResponseError for ApiError {
             )),
             ApiError::InvalidUsername => HttpResponse::BadRequest().json(ApiErrorResponse::new(
                 ApiStatusCode::InvalidUsername,
+                self.to_string(),
+            )),
+            ApiError::InvalidAddress => HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                ApiStatusCode::InvalidAddress,
+                self.to_string(),
+            )),
+            ApiError::AddressAlreadyExists => HttpResponse::BadRequest().json(
+                ApiErrorResponse::new(ApiStatusCode::AddressAlreadyExists, self.to_string()),
+            ),
+            ApiError::NameAlreadyExists => HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                ApiStatusCode::NameAlreadyExists,
                 self.to_string(),
             )),
         }
