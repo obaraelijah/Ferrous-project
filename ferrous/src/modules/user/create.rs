@@ -1,4 +1,4 @@
-//! This module holds functions for the user management.
+//! The user creation lives here
 
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHasher};
@@ -8,7 +8,6 @@ use rorm::{insert, query, Database, Model};
 use webauthn_rs::prelude::Uuid;
 
 use crate::models::{User, UserInsert};
-
 
 /**
 Create a user in a transaction.
@@ -20,6 +19,7 @@ Returns the [Uuid] of the user.
 - `admin`: Flag if the user has administrative privileges
 - `db`: Reference of a [Database] instance
 */
+
 pub async fn create_user_transaction(
     username: String,
     display_name: String,
@@ -47,6 +47,7 @@ Returns the [Uuid] of the user.
 - `db`: Reference of a [Database] instance
 - `tx`: A mutable reference to a [Transaction]
  */
+
 pub async fn create_user<'db>(
     username: String,
     display_name: String,
