@@ -212,7 +212,6 @@ impl actix_web::ResponseError for ApiError {
     }
 }
 
-
 impl From<rorm::Error> for ApiError {
     fn from(value: rorm::Error) -> Self {
         Self::DatabaseError(value)

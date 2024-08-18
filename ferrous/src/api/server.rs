@@ -59,7 +59,6 @@ pub(crate) async fn start_server(db: Database, config: &Config) -> Result<(), St
                     .build(),
             )
             .wrap(Compress::default())
-            
             .wrap(ErrorHandlers::new().handler(StatusCode::NOT_FOUND, handle_not_found))
             .service(
                 scope("api/v1/auth")
