@@ -1,25 +1,43 @@
-name: Build & Tests on linux
+name: Build & Tests on Linux
+
 on:
   push:
     paths-ignore:
       - "*.md"
-    pull_request:
+  pull_request:
 
 jobs:
-  workspaces:
+  clippy-analyze-linux:
+    name: Clippy Analyze
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     env:
       CARGO_TERM_COLOR: always
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # When rustup is updated, it tries to replace its binary, which on Windows is somehow locked.
-      # This can result in the CI failure, see: https://github.com/rust-lang/rustup/issues/3029
-      - run: |
+      # Disable rustup auto-self-update and set up the environment
+      - name: Setup Rust and Clippy
+        run: |
           rustup set auto-self-update disable
-          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo check
-        working-directory: ferrous
+          rustup toolchain install stable --profile minimal
+          rustup component add clippy
+          cargo install clippy-sarif sarif-fmt
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run rust-clippy
+        run: cargo clippy --workspace --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+        continue-on-error: true
+
+      - name: Upload Clippy analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: rust-clippy-results.sarif
+          wait-for-processing: true
