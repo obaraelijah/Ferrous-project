@@ -34,7 +34,7 @@ pub mod models;
 pub mod modules;
 
 #[derive(Parser)]
-#[clap(version)]
+#[clap(version, about = "The ferrous core")]
 struct Cli {
     #[clap(long = "config-path")]
     #[clap(help = "Specify an alternative path to the config file")]

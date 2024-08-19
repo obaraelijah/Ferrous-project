@@ -54,10 +54,7 @@ jobs:
           shared-key: "1"
 
       - name: Build Ferrous
-        run: cargo build -p ferrous
-
-      - name: Build Leech
-        run: cargo build -p leech
+        run: cargo build -p ferrous -p leech
 
   clippy-analyze-linux:
     needs: dependencies
@@ -83,7 +80,6 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          save-if: "false"
           shared-key: "1"
 
       - name: Run rust-clippy
