@@ -9,6 +9,7 @@ use webauthn_rs::prelude::WebauthnError;
 pub(crate) use crate::api::handler::auth::*;
 pub(crate) use crate::api::handler::leeches::*;
 pub(crate) use crate::api::handler::users::*;
+pub(crate) use crate::api::handler::workspaces::*;
 use crate::modules::user::create::CreateUserError;
 use crate::modules::user::delete::DeleteUserError;
 
@@ -42,6 +43,7 @@ enum ApiStatusCode {
     AddressAlreadyExists = 1012,
     NameAlreadyExists = 1013,
     InvalidId = 1014,
+    WorkspaceNotDeletable = 1015,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -87,6 +89,7 @@ pub(crate) enum ApiError {
     AddressAlreadyExists,
     NameAlreadyExists,
     InvalidId,
+    WorkspaceNotDeletable,
 }
 
 impl std::fmt::Display for ApiError {
@@ -116,6 +119,7 @@ impl std::fmt::Display for ApiError {
             ApiError::AddressAlreadyExists => write!(f, "Address already exists"),
             ApiError::NameAlreadyExists => write!(f, "Name already exists"),
             ApiError::InvalidId => write!(f, "Invalid ID"),
+            ApiError::WorkspaceNotDeletable => write!(f, "Workspace is not deletable"),
         }
     }
 }
@@ -261,6 +265,9 @@ impl actix_web::ResponseError for ApiError {
                 ApiStatusCode::InvalidId,
                 self.to_string(),
             )),
+            ApiError::WorkspaceNotDeletable => HttpResponse::BadRequest().json(
+                ApiErrorResponse::new(ApiStatusCode::WorkspaceNotDeletable, self.to_string()),
+            ),
         }
     }
 }
