@@ -32,55 +32,8 @@ jobs:
           rustup component add clippy
           cargo install clippy-sarif sarif-fmt
 
-  build-linux:
-    needs: dependencies
-    name: Build
-    runs-on: ubuntu-latest
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Disable rustup auto-self-update and set up the environment
-      - name: Setup Rust
-        run: |
-          rustup set auto-self-update disable
-          rustup toolchain install stable --profile minimal
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "1"
-
       - name: Build Ferrous
         run: cargo build -p ferrous -p leech
-
-  clippy-analyze-linux:
-    needs: dependencies
-    name: Clippy Analyze
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-    env:
-      CARGO_TERM_COLOR: always
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Disable rustup auto-self-update and set up the environment
-      - name: Setup Rust and Clippy
-        run: |
-          rustup set auto-self-update disable
-          rustup toolchain install stable --profile minimal
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "1"
 
       - name: Run rust-clippy
         run: cargo clippy --workspace --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
