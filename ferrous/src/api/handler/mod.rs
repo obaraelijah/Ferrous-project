@@ -15,6 +15,7 @@ use crate::modules::user::delete::DeleteUserError;
 mod auth;
 mod users;
 mod leeches;
+mod workspaces;
 
 #[derive(Deserialize)]
 pub(crate) struct PathId {

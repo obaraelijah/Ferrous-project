@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
           vb.memorybacking :access, :mode => "shared"
       end
     ferrous.vm.provision :ansible do |a|
-        a.playbook = "vagrantferrous.yml"
+        a.playbook = "vagrant/ferrous.yml"
       end
   end
   
