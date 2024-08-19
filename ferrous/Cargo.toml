@@ -1,5 +1,5 @@
 [package]
-name = "Ferrous-project"
+name = "ferrous"
 version = "0.1.0"
 edition = "2021"
 authors = ["Elijah Obara <elijahobara@samson.dev>"]
