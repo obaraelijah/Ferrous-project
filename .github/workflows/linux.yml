@@ -8,7 +8,7 @@ on:
 
 jobs:
   dependencies:
-    name: Install dependencies
+    name: Build & Tests on linux
     runs-on: ubuntu-latest
     permissions:
       contents: read
