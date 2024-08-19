@@ -7,6 +7,29 @@ on:
   pull_request:
 
 jobs:
+  dependencies:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Disable rustup auto-self-update and set up the environment
+      - name: Setup Rust
+        run: |
+          rustup set auto-self-update disable
+          rustup toolchain install stable --profile minimal
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Clippy and other tools
+        run: |
+          rustup component add clippy
+          cargo install clippy-sarif sarif-fmt
+
   build-linux:
     name: Build
     runs-on: ubuntu-latest
@@ -32,6 +55,7 @@ jobs:
         run: cargo build -p leech
 
   clippy-analyze-linux:
+    needs: dependencies
     name: Clippy Analyze
     runs-on: ubuntu-latest
     permissions:
@@ -50,8 +74,6 @@ jobs:
         run: |
           rustup set auto-self-update disable
           rustup toolchain install stable --profile minimal
-          rustup component add clippy
-          cargo install clippy-sarif sarif-fmt
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
