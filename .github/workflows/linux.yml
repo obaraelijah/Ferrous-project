@@ -24,6 +24,8 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "1"
 
       - name: Install Clippy and other tools
         run: |
@@ -48,6 +50,8 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "1"
 
       - name: Build Ferrous
         run: cargo build -p ferrous
@@ -80,6 +84,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: "false"
+          shared-key: "1"
 
       - name: Run rust-clippy
         run: cargo clippy --workspace --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
