@@ -9,13 +9,15 @@ use webauthn_rs::prelude::WebauthnError;
 pub(crate) use crate::api::handler::auth::*;
 pub(crate) use crate::api::handler::leeches::*;
 pub(crate) use crate::api::handler::users::*;
+pub(crate) use crate::api::handler::websocket::*;
 pub(crate) use crate::api::handler::workspaces::*;
 use crate::modules::user::create::CreateUserError;
 use crate::modules::user::delete::DeleteUserError;
 
 mod auth;
-mod users;
 mod leeches;
+mod users;
+mod websocket;
 mod workspaces;
 
 #[derive(Deserialize)]
@@ -338,7 +340,7 @@ impl From<DeleteUserError> for ApiError {
 ///     #[serde(deserialize_with = "crate::api::handler::de_optional")]
 ///     description: Option<Option<String>>,
 /// }
-/// 
+///
 pub(crate) fn de_optional<'de, D, T>(d: D) -> Result<Option<Option<T>>, D::Error>
 where
     D: Deserializer<'de>,
