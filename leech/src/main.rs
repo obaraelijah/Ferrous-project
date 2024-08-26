@@ -13,6 +13,7 @@
     allow(dead_code, unused_variables, unused_imports)
 )]
 
+pub mod config;
 pub mod modules;
 
 #[rorm::rorm_main]
