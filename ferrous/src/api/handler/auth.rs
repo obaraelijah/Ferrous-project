@@ -1,6 +1,6 @@
 use actix_toolbox::tb_middleware::Session;
 use actix_web::web::{Data, Json};
-use actix_web::HttpResponse;
+use actix_web::{get, post, HttpResponse};
 use argon2::password_hash::Error;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use chrono::Utc;
@@ -16,6 +16,7 @@ use webauthn_rs::prelude::{
 use webauthn_rs::Webauthn;
 
 use crate::api::handler::{ApiError, ApiResult};
+use crate::chan::{WsManagerChan, WsManagerMessage};
 use crate::models::{User, UserKey, UserKeyInsert};
 
 #[utoipa::path(
@@ -100,10 +101,22 @@ pub(crate) async fn login(
         (status = 500, description = "Server error", body = ApiErrorResponse)
     ),
 )]
-pub(crate) async fn logout(session: Session) -> HttpResponse {
+pub(crate) async fn logout(
+    session: Session,
+    ws_manager_chan: Data<WsManagerChan>,
+) -> ApiResult<HttpResponse> {
+    let uuid: Vec<u8> = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
     session.purge();
 
-    HttpResponse::Ok().finish()
+    if let Err(err) = ws_manager_chan
+        .send(WsManagerMessage::CloseSocket(uuid))
+        .await
+    {
+        error!("Error sending to websocket manager: {err}");
+        return Err(ApiError::InternalServerError);
+    }
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[utoipa::path(
@@ -213,6 +226,7 @@ pub(crate) async fn start_register(
     if !session.get("logged_in")?.ok_or(ApiError::Unauthenticated)? {
         return Err(ApiError::Unauthenticated);
     }
+
     let uuid: Vec<u8> = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
     let mut user = query!(&db, User)
@@ -222,7 +236,6 @@ pub(crate) async fn start_register(
         .ok_or(ApiError::SessionCorrupt)?;
 
     User::F.user_keys.populate(&db, &mut user).await?;
-
     if !user.user_keys.cached.unwrap().is_empty()
         && !session.get("2fa")?.ok_or(ApiError::Missing2FA)?
     {
