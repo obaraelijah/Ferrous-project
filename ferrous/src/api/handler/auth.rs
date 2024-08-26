@@ -8,6 +8,7 @@ use log::debug;
 use rorm::internal::field::foreign_model::ForeignModelByField;
 use rorm::{insert, query, update, Database, Model};
 use serde::Deserialize;
+use utoipa::ToSchema;
 use webauthn_rs::prelude::{
     CreationChallengeResponse, CredentialID, Passkey, PasskeyAuthentication, PasskeyRegistration,
     PublicKeyCredential, RegisterPublicKeyCredential, RequestChallengeResponse, Uuid,
@@ -17,16 +18,39 @@ use webauthn_rs::Webauthn;
 use crate::api::handler::{ApiError, ApiResult};
 use crate::models::{User, UserKey, UserKeyInsert};
 
+#[utoipa::path(
+    get,
+    context_path = "/api/v1",
+    path = "/test",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "Logged in"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    )
+)]
 pub(crate) async fn test() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-#[derive(Deserialize)]
+#[derive(ToSchema, Deserialize)]
 pub(crate) struct LoginRequest {
     username: String,
     password: String,
 }
 
+#[utoipa::path(
+    post,
+    context_path = "/api/v1",
+    path = "/auth/login",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "Login successful"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+    request_body = LoginRequest,
+)]
 pub(crate) async fn login(
     req: Json<LoginRequest>,
     db: Data<Database>,
@@ -65,12 +89,34 @@ pub(crate) async fn login(
     Ok(HttpResponse::Ok().finish())
 }
 
+#[utoipa::path(
+    get,
+    context_path = "/api/v1",
+    path = "/auth/logout",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "Logout successful"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+)]
 pub(crate) async fn logout(session: Session) -> HttpResponse {
     session.purge();
 
     HttpResponse::Ok().finish()
 }
 
+#[utoipa::path(
+    post,
+    context_path = "/api/v1",
+    path = "/auth/start_auth",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "2FA Authentication started", body = inline(Object)),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+)]
 pub(crate) async fn start_auth(
     db: Data<Database>,
     session: Session,
@@ -105,6 +151,18 @@ pub(crate) async fn start_auth(
     Ok(Json(rcr))
 }
 
+#[utoipa::path(
+    post,
+    context_path = "/api/v1",
+    path = "/auth/finish_auth",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "2FA Authentication finished"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+    request_body = inline(Object)
+)]
 pub(crate) async fn finish_auth(
     auth: Json<PublicKeyCredential>,
     db: Data<Database>,
@@ -136,6 +194,17 @@ pub(crate) async fn finish_auth(
     Ok(HttpResponse::Ok().finish())
 }
 
+#[utoipa::path(
+    post,
+    context_path = "/api/v1",
+    path = "/auth/start_register",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "2FA Key registration started", body = inline(Object)),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+)]
 pub(crate) async fn start_register(
     db: Data<Database>,
     session: Session,
@@ -189,13 +258,25 @@ pub(crate) async fn start_register(
     Ok(Json(ccr))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub(crate) struct FinishRegisterRequest {
     #[serde(flatten)]
     register_pk_credential: RegisterPublicKeyCredential,
     name: String,
 }
 
+#[utoipa::path(
+    post,
+    context_path = "/api/v1",
+    path = "/auth/finish_register",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "2FA Key registration finished"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    request_body = FinishRegisterRequest
+)]
 pub(crate) async fn finish_register(
     req: Json<FinishRegisterRequest>,
     db: Data<Database>,
