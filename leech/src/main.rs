@@ -13,9 +13,30 @@
     allow(dead_code, unused_variables, unused_imports)
 )]
 
+use std::net::IpAddr;
+use std::num::{NonZeroU16, NonZeroUsize};
+use std::str::FromStr;
+use std::time::Duration;
+
 use clap::{Parser, Subcommand};
+use ipnet::IpNet;
+use itertools::Itertools;
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 use crate::config::get_config;
+use crate::modules::port_scanner::{start_tcp_con_port_scan, TcpPortScannerSettings};
+
+pub mod config;
+pub mod modules;
+
+pub(crate) struct Regexes {
+    pub(crate) ports: Regex,
+}
+
+static RE: Lazy<Regexes> = Lazy::new(|| Regexes {
+    ports: Regex::new(r#"^(?P<range>\d*-\d*)$|^(?P<single>\d+)$|^$"#).unwrap(),
+});
 
 #[derive(Subcommand)]
 enum RunCommand {
@@ -80,15 +101,17 @@ struct Cli {
     commands: Command,
 }
 
-pub mod config;
-pub mod modules;
-
 #[rorm::rorm_main]
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let cli = Cli::parse();
 
     let _config = get_config(&cli.config_path).map_err(|e| e.to_string())?;
-    
+
+    match cli.commands {
+        Command::Server => {}
+        Command::Execute { command } => todo!(),
+    }
+
     Ok(())
 }
