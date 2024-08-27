@@ -107,4 +107,44 @@ pub async fn start_tcp_con_port_scan(settings: TcpPortScannerSettings) {
             }
         }
     });
+
+    // Increase the NO_FILE limit if necessary
+    if let Err(err) = rlimit::increase_nofile_limit(settings.concurrent_limit as u64 + 100) {
+        println!("Could not increase nofile limit: {err}");
+        return;
+    }
+
+    stream::iter(product_it)
+        .for_each_concurrent(settings.concurrent_limit, move |(port, addr)| {
+            let tx = tx.clone();
+
+            async move {
+                let s_addr = SocketAddr::new(addr, port);
+
+                for _ in 0..=settings.max_retries {
+                    if let Ok(res) = timeout(settings.timeout, TcpStream::connect(s_addr)).await {
+                        match res {
+                            Ok(mut stream) => {
+                                stream.shutdown().await.unwrap();
+                                tx.send(Some(s_addr)).await.unwrap();
+                                break;
+                            }
+                            Err(err) => {
+                                let err_str = err.to_string();
+                                if err_str.contains("refused") {
+                                    tx.send(None).await.unwrap();
+                                } else {
+                                    println!("{err}");
+                                }
+                            }
+                        }
+                    } else {
+                        debug!("Timeout reached");
+                        tx.send(None).await.unwrap();
+                    }
+                    sleep(settings.retry_interval).await;
+                }
+            }
+        })
+        .await;
 }
