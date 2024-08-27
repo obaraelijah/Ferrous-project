@@ -60,4 +60,51 @@ pub async fn start_tcp_con_port_scan(settings: TcpPortScannerSettings) {
             return;
         }
     };
+
+    let mut icmp_handles = JoinSet::new();
+
+    for addr in settings.addresses {
+        let icmp_client = if addr.is_ipv4() {
+            icmp_v4_client.clone()
+        } else {
+            icmp_v6_client.clone()
+        };
+        icmp_handles.spawn(async move {
+            const PAYLOAD: [u8; 56] = [0; 56];
+            let mut pinger = icmp_client
+                .pinger(addr, PingIdentifier::from(random::<u16>()))
+                .await;
+
+            let mut reachable = false;
+            for seq in 0..3 {
+                if pinger.ping(PingSequence(seq), &PAYLOAD).await.is_ok() {
+                    reachable = true;
+                    break;
+                }
+            }
+
+            match reachable {
+                true => Some(addr),
+                false => None,
+            }
+        });
+    }
+
+    let mut reachable_hosts = vec![];
+
+    while let Some(Ok(Some(addr))) = icmp_handles.join_next().await {
+        reachable_hosts.push(addr);
+    }
+
+    let product_it = iproduct!(settings.port_range, reachable_hosts);
+
+    let (tx, mut rx) = mpsc::channel(1000);
+
+    tokio::spawn(async move {
+        while let Some(res) = rx.recv().await {
+            if let Some(s_addr) = res {
+                println!("{s_addr}");
+            }
+        }
+    });
 }
