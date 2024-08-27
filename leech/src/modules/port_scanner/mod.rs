@@ -3,6 +3,17 @@
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
+use futures::{stream, StreamExt};
+use itertools::iproduct;
+use log::debug;
+use rand::random;
+use surge_ping::{Client, PingIdentifier, PingSequence, ICMP};
+use tokio::io::AsyncWriteExt;
+use tokio::net::TcpStream;
+use tokio::sync::mpsc;
+use tokio::task::JoinSet;
+use tokio::time::{sleep, timeout};
+
 /// The settings of a tcp connection port scan
 #[derive(Clone, Debug)]
 pub struct TcpPortScannerSettings {
@@ -26,6 +37,27 @@ pub struct TcpPortScannerSettings {
     pub skip_ping_check: bool,
 }
 
+/// Start a TCP port scan with this function
+///
+/// **Parameter**:
+/// - settings: [TcpPortScannerSettings]
 pub async fn start_tcp_con_port_scan(settings: TcpPortScannerSettings) {
-    unimplemented!()
+    let icmp_config_v4 = surge_ping::Config::default();
+    let icmp_config_v6 = surge_ping::Config::builder().kind(ICMP::V6).build();
+
+    let icmp_v4_client = match Client::new(&icmp_config_v4) {
+        Ok(client) => client,
+        Err(err) => {
+            println!("Error creating ping client: {err}");
+            return;
+        }
+    };
+
+    let icmp_v6_client = match Client::new(&icmp_config_v6) {
+        Ok(client) => client,
+        Err(err) => {
+            println!("Error creating ping client: {err}");
+            return;
+        }
+    };
 }
