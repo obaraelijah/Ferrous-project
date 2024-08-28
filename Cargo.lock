@@ -1751,6 +1751,7 @@ dependencies = [
 name = "leech"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "clap",
  "futures",
  "ipnet",
@@ -1764,6 +1765,7 @@ dependencies = [
  "rlimit",
  "rorm",
  "serde",
+ "serde_json",
  "surge-ping",
  "tokio",
  "toml",
