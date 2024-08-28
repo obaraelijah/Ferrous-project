@@ -110,7 +110,119 @@ async fn main() -> Result<(), String> {
 
     match cli.commands {
         Command::Server => {}
-        Command::Execute { command } => todo!(),
+        Command::Execute { command } => match command {
+            RunCommand::PortScanner {
+                targets,
+                exclude,
+                ports,
+                timeout,
+                concurrent_limit,
+                max_retries,
+                retry_interval,
+                skip_ping_check,
+            } => {
+                let mut addresses = vec![];
+                for target in targets {
+                    if let Ok(addr) = IpAddr::from_str(&target) {
+                        addresses.push(addr);
+                    } else if let Ok(net) = IpNet::from_str(&target) {
+                        addresses.extend(net.hosts());
+                    } else {
+                        return Err(format!("{target} isn't valid ip address or ip net"));
+                    }
+                }
+
+                let mut exclude_addresses = vec![];
+                for ex in exclude {
+                    if let Ok(addr) = IpAddr::from_str(&ex) {
+                        exclude_addresses.push(addr);
+                    } else if let Ok(net) = IpNet::from_str(&ex) {
+                        exclude_addresses.extend(net.hosts());
+                    } else {
+                        return Err(format!("{ex} isn't valid ip address or ip net"));
+                    }
+                }
+
+                let addresses: Vec<IpAddr> = addresses
+                    .into_iter()
+                    .filter(|addr| !exclude_addresses.contains(addr))
+                    .sorted()
+                    .dedup()
+                    .collect();
+
+                let mut parsed_ports = vec![];
+                for port in ports {
+                    let port_parts = port.split(',');
+                    for part in port_parts {
+                        if let Some(captures) = RE.ports.captures(part) {
+                            if let Some(c) = captures.get(0) {
+                                if c.as_str().is_empty() {
+                                    continue;
+                                }
+                            }
+                            if let Some(m) = captures.name("range") {
+                                let mut start = 1;
+                                let mut end = u16::MAX;
+                                for (idx, content) in m.as_str().split('-').into_iter().enumerate()
+                                {
+                                    match idx {
+                                        0 => {
+                                            if content.is_empty() {
+                                                start = 1;
+                                            } else if let Ok(v) = NonZeroU16::from_str(content) {
+                                                start = u16::from(v);
+                                            } else {
+                                                return Err(format!("Invalid port: {content}"));
+                                            }
+                                        }
+                                        1 => {
+                                            if content.is_empty() {
+                                                end = u16::MAX;
+                                            } else if let Ok(v) = NonZeroU16::from_str(content) {
+                                                end = u16::from(v);
+                                            } else {
+                                                return Err(format!("Invalid port: {content}"));
+                                            }
+                                        }
+                                        _ => unreachable!(""),
+                                    }
+                                }
+
+                                if end < start {
+                                    return Err(format!("Invalid port range: {end} < {start}"));
+                                }
+
+                                for port in start..=end {
+                                    parsed_ports.push(port);
+                                }
+                            } else if let Some(m) = captures.name("single") {
+                                if let Ok(v) = NonZeroU16::from_str(m.as_str()) {
+                                    parsed_ports.push(u16::from(v));
+                                } else {
+                                    return Err(format!("Invalid port: {}", m.as_str()));
+                                }
+                            }
+                        } else {
+                            return Err(format!("Invalid port declaration found: {part}"));
+                        }
+                    }
+                }
+
+                parsed_ports.sort();
+                parsed_ports.dedup();
+
+                start_tcp_con_port_scan(TcpPortScannerSettings {
+                    addresses,
+                    port_range: parsed_ports,
+                    timeout: Duration::from_millis(timeout as u64),
+                    skip_ping_check,
+                    max_retries,
+                    retry_interval: Duration::from_millis(retry_interval as u64),
+                    concurrent_limit: usize::from(concurrent_limit),
+                })
+                .await;
+            }
+        },
     }
 
     Ok(())
