@@ -2,6 +2,7 @@
 //!
 //! For technical information, see [here](https://certificate.transparency.dev/)
 
+pub mod crt_sh_db;
 pub mod crt_sh_types;
 
 pub struct CertificateTransparencySettings {
