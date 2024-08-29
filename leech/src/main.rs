@@ -1,3 +1,12 @@
+//! # Leeches
+//! Leeches are the workers of ferrous.
+//!
+//! They provide a gRPC server to receive requests from ferrous and respond with results.
+//! If this connection is lost somehow, they will store the results in a local database
+//! and will try to connect to the ferrous gRPC server to send the missing data.
+//!
+//! You can also use the leech as a cli utility without a ferrous attached for manual
+//! execution and testing. See the subcommand `run` for further information.
 #![warn(missing_docs)]
 #![cfg_attr(
     feature = "rorm-main",
@@ -31,8 +40,103 @@ use crate::modules::port_scanner::{start_tcp_con_port_scan, TcpPortScannerSettin
 pub mod config;
 pub mod modules;
 pub mod utils;
-
-// ... [Rest of the code remains the same until the main function] ...
+/// The execution commands
+#[derive(Subcommand)]
+pub enum RunCommand {
+    /// Bruteforce subdomains via DNS
+    BruteforceSubdomains {
+        /// Valid domain name
+        target: Name,
+        /// Path to a wordlist that can be used for subdomain enumeration.
+        ///
+        /// The entries in the wordlist are assumed to be line seperated.
+        #[clap(short = 'w', long = "wordlist")]
+        wordlist_path: PathBuf,
+        /// The concurrent task limit
+        #[clap(long)]
+        #[clap(default_value_t = NonZeroUsize::new(50).unwrap())]
+        concurrent_limit: NonZeroUsize,
+    },
+    /// Retrieve domains through certificate transparency
+    CertificateTransparency {
+        /// Valid domain name
+        target: String,
+        /// Whether expired certificates should be included
+        #[clap(long)]
+        #[clap(default_value_t = false)]
+        include_expired: bool,
+        /// Use the database instead of the API
+        #[clap(long)]
+        #[clap(default_value_t = false)]
+        db: bool,
+    },
+    /// A simple port scanning utility
+    PortScanner {
+        /// Valid IPv4 or IPv6 addresses or networks in CIDR notation
+        #[clap(required(true))]
+        targets: Vec<String>,
+        /// A single port, multiple, comma seperated ports or (inclusive) port ranges
+        ///
+        /// If no values are supplied, 1-65535 is used as default
+        #[clap(short = 'p')]
+        ports: Vec<String>,
+        /// Valid IPv4 or IPv6 addresses or networks in CIDR notation
+        #[clap(long)]
+        exclude: Vec<String>,
+        /// The time to wait until a connection is considered failed.
+        ///
+        /// The timeout is specified in milliseconds.
+        #[clap(long)]
+        #[clap(default_value_t = 1000)]
+        timeout: u16,
+        /// The concurrent task limit
+        #[clap(long)]
+        #[clap(default_value_t = NonZeroUsize::new(1000).unwrap())]
+        concurrent_limit: NonZeroUsize,
+        /// The number of times the connection should be retried if it failed.
+        #[clap(long)]
+        #[clap(default_value_t = 6)]
+        max_retries: u8,
+        /// The interval that should be wait between retries on a port.
+        ///
+        /// The interval is specified in milliseconds.
+        #[clap(long)]
+        #[clap(default_value_t = 100)]
+        retry_interval: u16,
+        /// Skips the initial icmp check.
+        ///
+        /// All hosts are assumed to be reachable.
+        #[clap(long)]
+        #[clap(default_value_t = false)]
+        skip_icmp_check: bool,
+    },
+}
+/// All available subcommands
+#[derive(Subcommand)]
+pub enum Command {
+    /// Start the leech as a server
+    Server,
+    /// Execute a command via CLI
+    Execute {
+        /// Specifies the verbosity of the output
+        #[clap(short = 'v', global = true, action = ArgAction::Count)]
+        verbosity: u8,
+        /// the subcommand to execute
+        #[clap(subcommand)]
+        command: RunCommand,
+    },
+}
+/// The main CLI parser
+#[derive(Parser)]
+pub struct Cli {
+    /// Specify an alternative path to the config file
+    #[clap(long = "config-path")]
+    #[clap(default_value_t = String::from("/etc/leech/config.toml"))]
+    config_path: String,
+    /// Subcommands
+    #[clap(subcommand)]
+    commands: Command,
+}
 
 #[rorm::rorm_main]
 #[tokio::main]
@@ -60,7 +164,6 @@ async fn main() -> Result<(), String> {
                     concurrent_limit,
                 } => {
                     let (tx, mut rx) = mpsc::channel(128);
-
                     task::spawn(async move {
                         while let Some(res) = rx.recv().await {
                             match res {
@@ -82,7 +185,9 @@ async fn main() -> Result<(), String> {
                         wordlist_path,
                         concurrent_limit: usize::from(concurrent_limit),
                     };
-                    bruteforce_subdomains(settings, tx).await?
+                    if let Err(err) = bruteforce_subdomains(settings, tx).await {
+                        error!("{err}");
+                    }
                 }
                 RunCommand::CertificateTransparency {
                     target,
