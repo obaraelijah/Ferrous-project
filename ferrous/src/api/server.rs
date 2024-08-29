@@ -1,8 +1,15 @@
 use std::fmt::{Display, Formatter};
 
 use crate::api::handler;
-use crate::api::middleware::{handle_not_found, json_extractor_error};
-use crate::api::swagger::ApiDoc;
+use crate::api::handler::{
+    create_leech, create_user, create_workspace, delete_leech, delete_user, delete_workspace,
+    finish_auth, finish_register, get_all_leeches, get_all_users, get_all_workspaces,
+    get_all_workspaces_admin, get_leech, get_me, get_user, get_workspace, get_workspace_admin,
+    login, logout, set_password, start_auth, start_register, test, update_leech, websocket,
+};
+use crate::api::middleware::{
+    handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired,
+};use crate::api::swagger::ApiDoc;
 use crate::chan::WsManagerChan;
 use crate::config::Config;
 use actix_toolbox::tb_middleware::{
@@ -12,7 +19,7 @@ use actix_web::cookie::time::Duration;
 use actix_web::cookie::{Key, KeyError};
 use actix_web::http::StatusCode;
 use actix_web::middleware::{Compress, ErrorHandlers};
-use actix_web::web::{Data, JsonConfig, PayloadConfig};
+use actix_web::web::{scope, Data, JsonConfig, PayloadConfig};
 use actix_web::{App, HttpServer};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -67,6 +74,42 @@ pub(crate) async fn start_server(
             .wrap(Compress::default())
             .wrap(ErrorHandlers::new().handler(StatusCode::NOT_FOUND, handle_not_found))
             .service(SwaggerUi::new("/docs/{_:.*}").url("/api-doc/openapi.json", ApiDoc::openapi()))
+            .service(
+                scope("/api/v1/auth")
+                    .service(test)
+                    .service(login)
+                    .service(logout)
+                    .service(start_register)
+                    .service(finish_register)
+                    .service(start_auth)
+                    .service(finish_auth),
+            )
+            .service(
+                scope("/api/v1/admin")
+                    .wrap(AdminRequired)
+                    .service(get_leech)
+                    .service(get_all_leeches)
+                    .service(create_leech)
+                    .service(delete_leech)
+                    .service(update_leech)
+                    .service(create_user)
+                    .service(delete_user)
+                    .service(get_user)
+                    .service(get_all_users)
+                    .service(get_workspace_admin)
+                    .service(get_all_workspaces_admin),
+            )
+            .service(
+                scope("/api/v1")
+                    .wrap(AuthenticationRequired)
+                    .service(websocket)
+                    .service(get_me)
+                    .service(set_password)
+                    .service(get_workspace)
+                    .service(get_all_workspaces)
+                    .service(create_workspace)
+                    .service(delete_workspace),
+            )
     })
     .bind((
         config.server.api_listen_address.as_str(),

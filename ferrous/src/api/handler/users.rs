@@ -33,6 +33,7 @@ pub(crate) struct CreateUserResponse {
 /// Create a user
 #[utoipa::path(
     tag = "User Admin Management",
+    context_path = "/api/v1/admin",
     responses(
         (status = 200, description = "User got created", body = CreateUserResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -41,7 +42,7 @@ pub(crate) struct CreateUserResponse {
     request_body = inline(CreateUserRequest),
     security(("api_key" = []))
 )]
-#[post("/api/v1/admin/users", wrap = "AdminRequired")]
+#[post("/users")]
 pub(crate) async fn create_user(
     req: Json<CreateUserRequest>,
     db: Data<Database>,
@@ -67,6 +68,7 @@ pub(crate) struct DeleteUserRequest {
 
 #[utoipa::path(
     tag = "User Admin Management",
+    context_path = "/api/v1/admin",
     responses(
         (status = 200, description = "User got deleted"),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -75,7 +77,7 @@ pub(crate) struct DeleteUserRequest {
     params(DeleteUserRequest),
     security(("api_key" = []))
 )]
-#[delete("/api/v1/admin/users/{username}", wrap = "AdminRequired")]
+#[delete("/users/{username}")]
 pub(crate) async fn delete_user(
     req: Path<DeleteUserRequest>,
     db: Data<Database>,
@@ -107,6 +109,7 @@ pub(crate) struct GetUserResponse {
 
 #[utoipa::path(
     tag = "User Admin Management",
+    context_path = "/api/v1/admin",
     responses(
         (status = 200, description = "Returns the user", body = GetUser),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -115,7 +118,7 @@ pub(crate) struct GetUserResponse {
     params(GetUserRequest),
     security(("api_key" = []))
 )]
-#[get("/api/v1/admin/users/{username}", wrap = "AdminRequired")]
+#[get("/users/{username}")]
 pub(crate) async fn get_user(
     req: Path<GetUserRequest>,
     db: Data<Database>,
@@ -138,6 +141,7 @@ pub(crate) async fn get_user(
 
 #[utoipa::path(
     tag = "User Admin Management",
+    context_path = "/api/v1/admin",
     responses(
         (status = 200, description = "Returns all users", body = GetUserResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -145,7 +149,7 @@ pub(crate) async fn get_user(
     ),
     security(("api_key" = []))
 )]
-#[get("/api/v1/admin/users", wrap = "AdminRequired")]
+#[get("/users")]
 pub(crate) async fn get_all_users(db: Data<Database>) -> ApiResult<Json<GetUserResponse>> {
     let users = query!(&db, User).all().await?;
 
@@ -166,6 +170,7 @@ pub(crate) async fn get_all_users(db: Data<Database>) -> ApiResult<Json<GetUserR
 
 #[utoipa::path(
     tag = "User Management",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Returns the own user", body = GetUser),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -173,7 +178,7 @@ pub(crate) async fn get_all_users(db: Data<Database>) -> ApiResult<Json<GetUserR
     ),
     security(("api_key" = []))
 )]
-#[get("/api/v1/users/me", wrap = "AuthenticationRequired")]
+#[get("/users/me")]
 pub(crate) async fn get_me(session: Session, db: Data<Database>) -> ApiResult<Json<GetUser>> {
     let uuid: Vec<u8> = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
@@ -201,6 +206,7 @@ pub(crate) struct SetPasswordRequest {
 
 #[utoipa::path(
     tag = "User Management",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Password was updated"),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -209,7 +215,7 @@ pub(crate) struct SetPasswordRequest {
     request_body = SetPasswordRequest,
     security(("api_key" = []))
 )]
-#[post("/api/v1/users/setPassword", wrap = "AuthenticationRequired")]
+#[post("/users/setPassword")]
 pub(crate) async fn set_password(
     req: Json<SetPasswordRequest>,
     session: Session,

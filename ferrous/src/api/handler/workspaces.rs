@@ -24,6 +24,7 @@ pub(crate) struct CreateWorkspaceResponse {
 
 #[utoipa::path(
     tag = "Workspaces",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Workspace was created", body = CreateWorkspaceResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -32,7 +33,7 @@ pub(crate) struct CreateWorkspaceResponse {
     request_body = CreateWorkspaceRequest,
     security(("api_key" = []))
 )]
-#[post("/api/v1/workspaces", wrap = "AuthenticationRequired")]
+#[post("/workspaces")]
 pub(crate) async fn create_workspace(
     req: Json<CreateWorkspaceRequest>,
     db: Data<Database>,
@@ -54,6 +55,7 @@ pub(crate) async fn create_workspace(
 
 #[utoipa::path(
     tag = "Workspaces",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Workspace was deleted"),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -62,7 +64,7 @@ pub(crate) async fn create_workspace(
     params(PathId),
     security(("api_key" = []))
 )]
-#[delete("/api/v1/workspaces/{id}", wrap = "AuthenticationRequired")]
+#[delete("/workspaces/{id}")]
 pub(crate) async fn delete_workspace(
     req: Path<PathId>,
     session: Session,
@@ -134,6 +136,7 @@ pub(crate) struct GetWorkspaceResponse {
 
 #[utoipa::path(
     tag = "Workspaces",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Returns the workspace", body = GetWorkspace),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -142,7 +145,7 @@ pub(crate) struct GetWorkspaceResponse {
     params(PathId),
     security(("api_key" = []))
 )]
-#[get("/api/v1/workspaces/{id}", wrap = "AuthenticationRequired")]
+#[get("/workspaces/{id}")]
 pub(crate) async fn get_workspace(
     req: Path<PathId>,
     db: Data<Database>,
@@ -178,6 +181,7 @@ pub(crate) async fn get_workspace(
 
 #[utoipa::path(
     tag = "Workspaces",
+    context_path = "/api/v1",
     responses(
         (status = 200, description = "Returns all workspaces owned by the executing user", body = GetWorkspaceResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -185,7 +189,7 @@ pub(crate) async fn get_workspace(
     ),
     security(("api_key" = []))
 )]
-#[get("/api/v1/workspaces", wrap = "AuthenticationRequired")]
+#[get("/workspaces")]
 pub(crate) async fn get_all_workspaces(
     db: Data<Database>,
     session: Session,
@@ -211,6 +215,7 @@ pub(crate) async fn get_all_workspaces(
 
 #[utoipa::path(
     tag = "Admin Workspaces",
+    context_path = "/api/v1/admin",
     responses(
         (status = 200, description = "Returns the workspace with the given id", body = GetWorkspace),
         (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -219,7 +224,7 @@ pub(crate) async fn get_all_workspaces(
     params(PathId),
     security(("api_key" = []))
 )]
-#[get("/api/v1/admin/workspaces/{id}", wrap = "AdminRequired")]
+#[get("/workspaces/{id}")]
 pub(crate) async fn get_workspace_admin(
     req: Path<PathId>,
     db: Data<Database>,
@@ -238,6 +243,7 @@ pub(crate) async fn get_workspace_admin(
 }
 #[utoipa::path(
         tag = "Admin Workspaces",
+        context_path = "/api/v1/admin",
         responses(
             (status = 200, description = "Returns the workspace with the given id", body = GetWorkspaceResponse),
             (status = 400, description = "Client error", body = ApiErrorResponse),
@@ -245,7 +251,7 @@ pub(crate) async fn get_workspace_admin(
         ),
         security(("api_key" = []))
 )]
-#[get("/api/v1/admin/workspaces", wrap = "AdminRequired")]
+#[get("/workspaces")]
 pub(crate) async fn get_all_workspaces_admin(
     db: Data<Database>,
 ) -> ApiResult<Json<GetWorkspaceResponse>> {
