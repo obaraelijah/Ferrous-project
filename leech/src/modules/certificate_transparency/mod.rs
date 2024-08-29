@@ -6,8 +6,8 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use itertools::Itertools;
-use rorm::{Database, DatabaseConfiguration, DatabaseDriver};
 use log::{debug, info};
+use rorm::{Database, DatabaseConfiguration, DatabaseDriver};
 use tokio::time::sleep;
 use url::Url;
 

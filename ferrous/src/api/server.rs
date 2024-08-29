@@ -9,7 +9,8 @@ use crate::api::handler::{
 };
 use crate::api::middleware::{
     handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired,
-};use crate::api::swagger::ApiDoc;
+};
+use crate::api::swagger::ApiDoc;
 use crate::chan::WsManagerChan;
 use crate::config::Config;
 use actix_toolbox::tb_middleware::{

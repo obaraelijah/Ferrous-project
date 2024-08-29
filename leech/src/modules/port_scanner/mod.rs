@@ -108,7 +108,7 @@ pub async fn start_tcp_con_port_scan(
     }
 
     stream::iter(product_it)
-    .for_each_concurrent(settings.concurrent_limit as usize, move |(port, addr)| {
+        .for_each_concurrent(settings.concurrent_limit as usize, move |(port, addr)| {
             let tx = tx.clone();
 
             async move {
