@@ -39,7 +39,9 @@ use crate::modules::port_scanner::{start_tcp_con_port_scan, TcpPortScannerSettin
 
 pub mod config;
 pub mod modules;
+pub mod rpc;
 pub mod utils;
+
 /// The execution commands
 #[derive(Subcommand)]
 pub enum RunCommand {
@@ -111,6 +113,7 @@ pub enum RunCommand {
         skip_icmp_check: bool,
     },
 }
+
 /// All available subcommands
 #[derive(Subcommand)]
 pub enum Command {
@@ -126,6 +129,7 @@ pub enum Command {
         command: RunCommand,
     },
 }
+
 /// The main CLI parser
 #[derive(Parser)]
 pub struct Cli {
