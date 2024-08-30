@@ -1,5 +1,6 @@
 use actix_web::http::Uri;
 use actix_web::{delete, get, post, put, HttpResponse};
+use log::error;
 use rorm::{insert, query, update, Database, Model};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -7,6 +8,7 @@ use utoipa::ToSchema;
 
 use crate::api::handler::{ApiError, ApiResult, PathId};
 use crate::api::middleware::AdminRequired;
+use crate::chan::{RpcManagerChannel, RpcManagerEvent};
 use crate::models::{Leech, LeechInsert};
 use crate::modules::uri::check_leech_address;
 
@@ -37,6 +39,7 @@ pub(crate) struct CreateLeechResponse {
 pub(crate) async fn create_leech(
     req: Json<CreateLeechRequest>,
     db: Data<Database>,
+    rpc_manager_channel: Data<RpcManagerChannel>,
 ) -> ApiResult<Json<CreateLeechResponse>> {
     let mut tx = db.start_transaction().await?;
 
@@ -75,6 +78,11 @@ pub(crate) async fn create_leech(
 
     tx.commit().await?;
 
+    // Notify rpc manager about new leech
+    if let Err(err) = rpc_manager_channel.send(RpcManagerEvent::Created(id)).await {
+        error!("Error sending to rpc manager: {err}");
+    }
+
     Ok(Json(CreateLeechResponse { id }))
 }
 
@@ -93,6 +101,7 @@ pub(crate) async fn create_leech(
 pub(crate) async fn delete_leech(
     path: Path<PathId>,
     db: Data<Database>,
+    rpc_manager_channel: Data<RpcManagerChannel>,
 ) -> ApiResult<HttpResponse> {
     let mut tx = db.start_transaction().await?;
 
@@ -109,6 +118,14 @@ pub(crate) async fn delete_leech(
         .await?;
 
     tx.commit().await?;
+
+    // Notify rpc manager about deleted leech
+    if let Err(err) = rpc_manager_channel
+        .send(RpcManagerEvent::Deleted(path.id as i64))
+        .await
+    {
+        error!("Error sending to rpc manager: {err}");
+    }
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -203,6 +220,7 @@ pub(crate) async fn update_leech(
     path: Path<PathId>,
     req: Json<UpdateLeechRequest>,
     db: Data<Database>,
+    rpc_manager_channel: Data<RpcManagerChannel>,
 ) -> ApiResult<HttpResponse> {
     let mut tx = db.start_transaction().await?;
 
@@ -237,6 +255,14 @@ pub(crate) async fn update_leech(
         .await?;
 
     tx.commit().await?;
+
+    // Notify rpc manager about updated leech
+    if let Err(err) = rpc_manager_channel
+        .send(RpcManagerEvent::Updated(path.id as i64))
+        .await
+    {
+        error!("Error sending to rpc manager: {err}");
+    }
 
     Ok(HttpResponse::Ok().finish())
 }
