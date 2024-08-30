@@ -42,3 +42,75 @@ pub(crate) enum RpcManagerEvent {
     /// Leech got updated.
     Updated(i64),
 }
+
+/**
+Start the event loop to manage the rpc client connections.
+Returns an channel to push events to.
+**Parameter**:
+- `db`: [Database]: Instance of the database
+ */
+pub(crate) async fn start_rpc_manager(
+    db: Database,
+) -> Result<(RpcManagerChannel, RpcClients), String> {
+    let (tx, mut rx) = mpsc::channel(16);
+
+    let leeches = query!(&db, Leech)
+        .all()
+        .await
+        .map_err(|e| format!("Error while querying leeches: {e}"))?;
+
+    let rpc_clients: RpcClients = Data::new(RwLock::new(HashMap::new()));
+
+    let clients = rpc_clients.clone();
+    tokio::spawn(async move {
+        let mut client_join_handles: HashMap<i64, JoinHandle<()>> = HashMap::new();
+
+        for leech in leeches {
+            let leech_id = leech.id;
+            debug!("Spawning rpc client loop for {leech_id}");
+            let join_handle = tokio::spawn(rpc_client_loop(leech, clients.clone()));
+            client_join_handles.insert(leech_id, join_handle);
+        }
+
+        while let Some(event) = rx.recv().await {
+            match event {
+                RpcManagerEvent::Deleted(id) => {
+                    if let Some(join_handle) = client_join_handles.remove(&id) {
+                        // TODO: Graceful shutdown instead of killing
+                        debug!("Stopping rpc client loop for {id}");
+                        join_handle.abort();
+                    }
+                }
+                RpcManagerEvent::Created(id) => {
+                    if let Ok(Some(leech)) = query!(&db, Leech)
+                        .condition(Leech::F.id.equals(id))
+                        .optional()
+                        .await
+                    {
+                        debug!("Starting rpc client loop for {id}");
+                        let join_handle = tokio::spawn(rpc_client_loop(leech, clients.clone()));
+                        client_join_handles.insert(id, join_handle);
+                    }
+                }
+                RpcManagerEvent::Updated(id) => {
+                    if let Some(join_handle) = client_join_handles.get_mut(&id) {
+                        // TODO: Graceful shutdown instead of killing
+                        debug!("Stopping rpc client loop for {id}");
+                        join_handle.abort();
+
+                        if let Ok(Some(leech)) = query!(&db, Leech)
+                            .condition(Leech::F.id.equals(id))
+                            .optional()
+                            .await
+                        {
+                            debug!("Starting rpc client loop for {id}");
+                            *join_handle = tokio::spawn(rpc_client_loop(leech, clients.clone()));
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    Ok((tx, rpc_clients))
+}
