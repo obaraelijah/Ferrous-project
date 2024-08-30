@@ -61,10 +61,11 @@ async fn main() -> Result<(), String> {
     match cli.command {
         Command::Start => {
             let db = get_db(&config).await?;
-
+            let (rpc_manager_chan, rpc_clients) = chan::start_rpc_manager(db.clone()).await?;
             let ws_manager_chan = chan::start_ws_manager().await?;
 
-            server::start_server(db, &config, ws_manager_chan).await?;
+            server::start_server(db, &config, rpc_manager_chan, rpc_clients, ws_manager_chan)
+                .await?;
         }
         Command::Keygen => {
             let key = Key::generate();

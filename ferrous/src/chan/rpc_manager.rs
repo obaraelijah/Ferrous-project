@@ -17,23 +17,57 @@ use crate::rpc::rpc_attacks::req_attack_service_client::ReqAttackServiceClient;
 pub(crate) type RpcManagerChannel = Sender<RpcManagerEvent>;
 pub(crate) type RpcClients = Data<RwLock<HashMap<i64, ReqAttackServiceClient<Channel>>>>;
 
-/**
-Events for the RpcManager.
-Make sure to commit any pending database state regarding the event
-as the RpcManager must be able to retrieve the new state.
-*/
+const CLIENT_RETRY_INTERVAL: Duration = Duration::from_secs(10);
 
 /**
 Starts the rpc connection to a leech.
 **Parameter**:
 - `leech`: [Leech]: Instance of a leech
 - `rpc_clients`: [RpcClients]
-*/
-
+ */
 pub(crate) async fn rpc_client_loop(leech: Leech, rpc_clients: RpcClients) {
-    unimplemented!()
+    let endpoint = match Endpoint::from_str(&leech.address) {
+        Ok(v) => v,
+        Err(err) => {
+            warn!(
+                "Invalid leech address for leech {}: {}: {err}",
+                leech.id, leech.address
+            );
+
+            return;
+        }
+    };
+
+    let chan;
+    loop {
+        match endpoint.connect().await {
+            Ok(c) => {
+                chan = c;
+                break;
+            }
+            Err(err) => {
+                warn!(
+                    "Couldn't connect to leech {}: {err}. Retrying in {} seconds.",
+                    leech.id,
+                    CLIENT_RETRY_INTERVAL.as_secs()
+                );
+            }
+        }
+
+        sleep(CLIENT_RETRY_INTERVAL).await;
+    }
+
+    let client = ReqAttackServiceClient::new(chan);
+
+    let mut write = rpc_clients.write().await;
+    write.insert(leech.id, client);
 }
 
+/**
+Events for the RpcManager.
+Make sure to commit any pending database state regarding the event
+as the RpcManager must be able to retrieve the new state.
+ */
 pub(crate) enum RpcManagerEvent {
     /// Leech got deleted.
     Deleted(i64),
