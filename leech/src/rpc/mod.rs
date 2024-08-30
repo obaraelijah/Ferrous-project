@@ -10,6 +10,8 @@ use tonic::transport::Server;
 
 use crate::config::Config;
 
+pub mod attacks;
+
 /// Starts the gRPC server
 ///
 /// **Parameter**:
