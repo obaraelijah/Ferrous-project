@@ -32,6 +32,7 @@ pub(crate) mod chan;
 pub mod config;
 pub mod models;
 pub mod modules;
+pub(crate) mod rpc;
 
 #[derive(Parser)]
 #[clap(version, about = "The ferrous core")]
