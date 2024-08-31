@@ -30,6 +30,18 @@ pub(crate) struct BruteforceSubdomainsRequest {
     pub(crate) concurrent_limit: u32,
 }
 
+#[utoipa::path(
+    tag = "Attacks",
+    context_path = "/api/v1/",
+    responses(
+        (status = 202, description = "Attack scheduled", body = AttackResponse),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse)
+    ),
+    request_body = BruteforceSubdomainsRequest,
+    security(("api_key" = []))
+)]
+#[post("/attacks/bruteforceSubdomains")]
 pub(crate) async fn bruteforce_subdomains(
     req: Json<BruteforceSubdomainsRequest>,
     db: Data<Database>,
