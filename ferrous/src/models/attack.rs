@@ -1,7 +1,6 @@
 //! This module holds all the information regarding attacks
 
 use rorm::{ForeignModel, Model, Patch};
-
 use crate::models::User;
 
 /// The type of an attack

@@ -94,7 +94,7 @@ pub(crate) async fn bruteforce_subdomains(
 
                             let (source, to) = match record {
                                 Record::A(a_rec) => {
-                                    let Some(to) = a_rec.to else  {
+                                    let Some(to) = a_rec.to else {
                                         warn!("Missing field record.record.a.to in grpc response of bruteforce subdomains");
                                         continue;
                                     };
@@ -102,7 +102,7 @@ pub(crate) async fn bruteforce_subdomains(
                                     (a_rec.source, Ipv4Addr::from(to).to_string())
                                 }
                                 Record::Aaaa(aaaa_rec) => {
-                                    let Some(to) = aaaa_rec.to else  {
+                                    let Some(to) = aaaa_rec.to else {
                                         warn!("Missing field record.record.aaaa.to in grpc response of bruteforce subdomains");
                                         continue;
                                     };
