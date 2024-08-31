@@ -1,7 +1,7 @@
 //! This module holds all the information regarding attacks
 
-use rorm::{ForeignModel, Model, Patch};
 use crate::models::User;
+use rorm::{ForeignModel, Model, Patch};
 
 /// The type of an attack
 #[derive(Copy, Clone, Debug)]
