@@ -53,6 +53,7 @@ pub(crate) enum ApiStatusCode {
     EmptyJson = 1016,
     InvalidPassword = 1017,
     InvalidLeech = 1018,
+    UsernameAlreadyOccupied = 1019,
     InternalServerError = 2000,
     DatabaseError = 2001,
     SessionError = 2002,
@@ -102,6 +103,7 @@ pub(crate) enum ApiError {
     EmptyJson,
     InvalidPassword,
     InvalidLeech,
+    UsernameAlreadyOccupied,
 }
 
 impl std::fmt::Display for ApiError {
@@ -135,6 +137,7 @@ impl std::fmt::Display for ApiError {
             ApiError::EmptyJson => write!(f, "Received an empty json request"),
             ApiError::InvalidPassword => write!(f, "Invalid password supplied"),
             ApiError::InvalidLeech => write!(f, "Invalid leech"),
+            ApiError::UsernameAlreadyOccupied => write!(f, "Username is already occupied"),
         }
     }
 }
@@ -304,6 +307,14 @@ impl actix_web::ResponseError for ApiError {
 
                 HttpResponse::BadRequest().json(ApiErrorResponse::new(
                     ApiStatusCode::InvalidLeech,
+                    self.to_string(),
+                ))
+            }
+            ApiError::UsernameAlreadyOccupied => {
+                debug!("Username already occupied");
+
+                HttpResponse::BadRequest().json(ApiErrorResponse::new(
+                    ApiStatusCode::UsernameAlreadyOccupied,
                     self.to_string(),
                 ))
             }
