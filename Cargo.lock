@@ -1221,6 +1221,7 @@ dependencies = [
  "ipnet",
  "log",
  "prost",
+ "prost-types",
  "rand",
  "rorm",
  "rpassword",
