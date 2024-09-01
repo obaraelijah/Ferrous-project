@@ -1225,6 +1225,7 @@ dependencies = [
  "prost-types",
  "rand",
  "rorm",
+ "rorm-cli",
  "rpassword",
  "serde",
  "serde_json",
@@ -1906,6 +1907,7 @@ dependencies = [
  "reqwest",
  "rlimit",
  "rorm",
+ "rorm-cli",
  "serde",
  "serde_json",
  "surge-ping",
@@ -2919,6 +2921,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rorm-cli"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8293f6560be934927037acbd78472e02de52cd2ce1c1131e249296540575bd7"
+dependencies = [
+ "anyhow",
+ "clap",
+ "once_cell",
+ "regex",
+ "rorm-declaration",
+ "rorm-sql 0.6.2",
+ "rpassword",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "strum",
+ "tokio",
+ "toml",
+]
+
+[[package]]
 name = "rorm-db"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2930,7 +2953,7 @@ dependencies = [
  "ouroboros",
  "pin-project",
  "rorm-declaration",
- "rorm-sql",
+ "rorm-sql 0.5.4",
  "serde",
  "sqlx",
  "thiserror",
@@ -2969,6 +2992,18 @@ dependencies = [
  "libsqlite3-sys",
  "rorm-declaration",
  "thiserror",
+]
+
+[[package]]
+name = "rorm-sql"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f246e637bb4566dfd82446625344a69c8c369d013716833a61b897b03cff5e56"
+dependencies = [
+ "chrono",
+ "libsqlite3-sys",
+ "rorm-declaration",
+ "rustc_version",
 ]
 
 [[package]]
