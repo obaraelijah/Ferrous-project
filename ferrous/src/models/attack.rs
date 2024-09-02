@@ -1,10 +1,11 @@
 //! This module holds all the information regarding attacks
 
 use crate::models::User;
-use rorm::{ForeignModel, Model, Patch};
+use rorm::fields::ForeignModel;
+use rorm::{DbEnum, Model, Patch};
 
 /// The type of an attack
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, DbEnum)]
 pub enum AttackType {
     /// First variant to be mapped for 0
     Undefined,
@@ -14,17 +15,6 @@ pub enum AttackType {
     TcpPortScan,
     /// Query certificate transparency
     QueryCertificateTransparency,
-}
-
-impl From<AttackType> for i64 {
-    fn from(value: AttackType) -> Self {
-        match value {
-            AttackType::Undefined => 0,
-            AttackType::BruteforceSubdomains => 1,
-            AttackType::TcpPortScan => 2,
-            AttackType::QueryCertificateTransparency => 3,
-        }
-    }
 }
 
 /// Representation of an attack
@@ -39,7 +29,7 @@ pub struct Attack {
     /// Currently only an integer as rorm currently hasn't support for this.
     ///
     /// Use [AttackType] for use in ferrous.
-    pub attack_type: i64,
+    pub attack_type: AttackType,
 
     /// The user that started this attack
     pub started_from: ForeignModel<User>,
@@ -55,7 +45,7 @@ pub struct Attack {
 #[derive(Patch)]
 #[rorm(model = "Attack")]
 pub(crate) struct AttackInsert {
-    pub(crate) attack_type: i64,
+    pub(crate) attack_type: AttackType,
     pub(crate) started_from: ForeignModel<User>,
     pub(crate) finished_at: Option<chrono::NaiveDateTime>,
 }

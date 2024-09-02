@@ -57,7 +57,7 @@ pub(crate) async fn create_leech(
         return Err(ApiError::InvalidAddress);
     }
 
-    if query!(&db, Leech)
+    if query!(&mut tx, Leech)
         .transaction(&mut tx)
         .condition(Leech::F.address.equals(&req.address))
         .optional()
@@ -67,8 +67,7 @@ pub(crate) async fn create_leech(
         return Err(ApiError::AddressAlreadyExists);
     }
 
-    if query!(&db, Leech)
-        .transaction(&mut tx)
+    if query!(&mut tx, Leech)
         .condition(Leech::F.name.equals(&req.name))
         .optional()
         .await?
@@ -77,8 +76,8 @@ pub(crate) async fn create_leech(
         return Err(ApiError::NameAlreadyExists);
     }
 
-    let id = insert!(&db, LeechInsert)
-        .transaction(&mut tx)
+    let id = insert!(&mut tx, LeechInsert)
+        .return_primary_key()
         .single(&LeechInsert {
             name: req.name.clone(),
             address: req.address.clone(),
@@ -116,15 +115,13 @@ pub(crate) async fn delete_leech(
 ) -> ApiResult<HttpResponse> {
     let mut tx = db.start_transaction().await?;
 
-    query!(&db, (Leech::F.id,))
-        .transaction(&mut tx)
+    query!(&mut tx, (Leech::F.id,))
         .condition(Leech::F.id.equals(path.id as i64))
         .optional()
         .await?
         .ok_or(ApiError::InvalidId)?;
 
-    rorm::delete!(&db, Leech)
-        .transaction(&mut tx)
+    rorm::delete!(&mut tx, Leech)
         .condition(Leech::F.id.equals(path.id as i64))
         .await?;
 
@@ -165,7 +162,7 @@ pub(crate) struct GetLeech {
 )]
 #[get("/leeches/{id}")]
 pub(crate) async fn get_leech(req: Path<PathId>, db: Data<Database>) -> ApiResult<Json<GetLeech>> {
-    let leech = query!(&db, Leech)
+    let leech = query!(db.as_ref(), Leech)
         .condition(Leech::F.id.equals(req.id as i64))
         .optional()
         .await?
@@ -196,7 +193,7 @@ pub(crate) struct GetLeechResponse {
 )]
 #[get("/leeches")]
 pub(crate) async fn get_all_leeches(db: Data<Database>) -> ApiResult<Json<GetLeechResponse>> {
-    let leeches = query!(&db, Leech).all().await?;
+    let leeches = query!(db.as_ref(), Leech).all().await?;
 
     Ok(Json(GetLeechResponse {
         leeches: leeches
@@ -249,31 +246,25 @@ pub(crate) async fn update_leech(
 ) -> ApiResult<HttpResponse> {
     let mut tx = db.start_transaction().await?;
 
-    query!(&db, (Leech::F.id,))
-        .transaction(&mut tx)
+    let req = req.into_inner();
+
+    query!(&mut tx, (Leech::F.id,))
         .condition(Leech::F.id.equals(path.id as i64))
         .optional()
         .await?
         .ok_or(ApiError::InvalidId)?;
 
-    let mut ub = update!(&db, Leech).begin_dyn_set();
-
-    if let Some(name) = &req.name {
-        ub = ub.set(Leech::F.name, name);
-    }
-
     if let Some(address) = &req.address {
         if !check_leech_address(address) {
             return Err(ApiError::InvalidAddress);
         }
-        ub = ub.set(Leech::F.address, address);
     }
 
-    if let Some(description) = &req.description {
-        ub = ub.set(Leech::F.description, description.as_ref());
-    }
-
-    ub.transaction(&mut tx)
+    update!(&mut tx, Leech)
+        .begin_dyn_set()
+        .set_if(Leech::F.name, req.name)
+        .set_if(Leech::F.address, req.address)
+        .set_if(Leech::F.description, req.description)
         .finish_dyn_set()
         .map_err(|_| ApiError::EmptyJson)?
         .exec()

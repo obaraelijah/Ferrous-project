@@ -29,7 +29,7 @@ pub async fn create_user_transaction(
 ) -> Result<Uuid, CreateUserError> {
     let mut tx = db.start_transaction().await?;
 
-    let uuid = create_user(username, display_name, password, admin, db, &mut tx).await?;
+    let uuid = create_user(username, display_name, password, admin, &mut tx).await?;
 
     tx.commit().await?;
 
@@ -53,11 +53,9 @@ pub async fn create_user<'db>(
     display_name: String,
     password: String,
     admin: bool,
-    db: &'db Database,
-    tx: &mut Transaction<'db>,
+    tx: &mut Transaction,
 ) -> Result<Uuid, CreateUserError> {
-    query!(db, (User::F.uuid,))
-        .transaction(tx)
+    query!(&mut *tx, (User::F.uuid,))
         .optional()
         .await?
         .ok_or(CreateUserError::UsernameAlreadyExists)?;
@@ -69,10 +67,9 @@ pub async fn create_user<'db>(
 
     let uuid = Uuid::new_v4();
 
-    insert!(db, UserInsert)
-        .transaction(tx)
+    insert!(&mut *tx, UserInsert)
         .single(&UserInsert {
-            uuid: uuid.as_bytes().to_vec(),
+            uuid,
             username,
             display_name,
             password_hash,
