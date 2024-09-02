@@ -20,24 +20,6 @@ import { exists, mapValues } from '../runtime';
 export interface GetUser {
     /**
      * 
-     * @type {string}
-     * @memberof GetUser
-     */
-    uuid: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetUser
-     */
-    username: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetUser
-     */
-    displayName: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof GetUser
      */
@@ -50,10 +32,28 @@ export interface GetUser {
     createdAt: Date;
     /**
      * 
+     * @type {string}
+     * @memberof GetUser
+     */
+    displayName: string;
+    /**
+     * 
      * @type {Date}
      * @memberof GetUser
      */
-    lastLogin?: Date;
+    lastLogin: Date | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetUser
+     */
+    username: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetUser
+     */
+    uuid: string;
 }
 
 export function GetUserFromJSON(json: any): GetUser {
@@ -66,12 +66,12 @@ export function GetUserFromJSONTyped(json: any, ignoreDiscriminator: boolean): G
     }
     return {
 
-        'uuid': json['uuid'],
-        'username': json['username'],
-        'displayName': json['display_name'],
         'admin': json['admin'],
         'createdAt': (new Date(json['created_at'])),
-        'lastLogin': !exists(json, 'last_login') ? undefined : (new Date(json['last_login'])),
+        'displayName': json['display_name'],
+        'lastLogin': (json['last_login'] === null ? null : new Date(json['last_login'])),
+        'username': json['username'],
+        'uuid': json['uuid'],
     };
 }
 
@@ -84,11 +84,11 @@ export function GetUserToJSON(value?: GetUser | null): any {
     }
     return {
 
-        'uuid': value.uuid,
-        'username': value.username,
-        'display_name': value.displayName,
         'admin': value.admin,
         'created_at': (value.createdAt.toISOString()),
-        'last_login': value.lastLogin === undefined ? undefined : (value.lastLogin.toISOString()),
+        'display_name': value.displayName,
+        'last_login': (value.lastLogin === null ? null : value.lastLogin.toISOString()),
+        'username': value.username,
+        'uuid': value.uuid,
     };
 }

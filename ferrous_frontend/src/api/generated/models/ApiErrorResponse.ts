@@ -20,23 +20,24 @@ import {
 } from './';
 
 /**
- * 
+ * Representation of an error response
+ * * `status_code` holds the error code, `message` a human readable description of the error
  * @export
  * @interface ApiErrorResponse
  */
 export interface ApiErrorResponse {
     /**
      * 
-     * @type {ApiStatusCode}
-     * @memberof ApiErrorResponse
-     */
-    statusCode: ApiStatusCode;
-    /**
-     * 
      * @type {string}
      * @memberof ApiErrorResponse
      */
     message: string;
+    /**
+     * 
+     * @type {ApiStatusCode}
+     * @memberof ApiErrorResponse
+     */
+    statusCode: ApiStatusCode;
 }
 
 export function ApiErrorResponseFromJSON(json: any): ApiErrorResponse {
@@ -48,9 +49,8 @@ export function ApiErrorResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
         return json;
     }
     return {
-
-        'statusCode': ApiStatusCodeFromJSON(json['status_code']),
         'message': json['message'],
+        'statusCode': ApiStatusCodeFromJSON(json['status_code']),
     };
 }
 
@@ -63,7 +63,7 @@ export function ApiErrorResponseToJSON(value?: ApiErrorResponse | null): any {
     }
     return {
 
-        'status_code': ApiStatusCodeToJSON(value.statusCode),
         'message': value.message,
+        'status_code': ApiStatusCodeToJSON(value.statusCode),
     };
 }

@@ -13,48 +13,43 @@
 
 import { exists, mapValues } from '../runtime';
 /**
+ * The request type to update a workspace
  * 
+ * All parameter are optional, but at least one of them must be specified
  * @export
- * @interface UpdateLeechRequest
+ * @interface UpdateWorkspaceRequest
  */
-export interface UpdateLeechRequest {
+export interface UpdateWorkspaceRequest {
     /**
      * 
      * @type {string}
-     * @memberof UpdateLeechRequest
+     * @memberof UpdateWorkspaceRequest
      */
-    address: string | null;
+    description: string | null;
     /**
      * 
      * @type {string}
-     * @memberof UpdateLeechRequest
-     */
-    description?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateLeechRequest
+     * @memberof UpdateWorkspaceRequest
      */
     name: string | null;
 }
 
-export function UpdateLeechRequestFromJSON(json: any): UpdateLeechRequest {
-    return UpdateLeechRequestFromJSONTyped(json, false);
+export function UpdateWorkspaceRequestFromJSON(json: any): UpdateWorkspaceRequest {
+    return UpdateWorkspaceRequestFromJSONTyped(json, false);
 }
 
-export function UpdateLeechRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): UpdateLeechRequest {
+export function UpdateWorkspaceRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): UpdateWorkspaceRequest {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
 
-        'address': json['address'],
-        'description': !exists(json, 'description') ? undefined : json['description'],
+        'description': json['description'],
         'name': json['name'],
     };
 }
 
-export function UpdateLeechRequestToJSON(value?: UpdateLeechRequest | null): any {
+export function UpdateWorkspaceRequestToJSON(value?: UpdateWorkspaceRequest | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -63,7 +58,6 @@ export function UpdateLeechRequestToJSON(value?: UpdateLeechRequest | null): any
     }
     return {
 
-        'address': value.address,
         'description': value.description,
         'name': value.name,
     };

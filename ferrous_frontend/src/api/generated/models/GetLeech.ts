@@ -20,6 +20,12 @@ import { exists, mapValues } from '../runtime';
 export interface GetLeech {
     /**
      * 
+     * @type {string}
+     * @memberof GetLeech
+     */
+    address: string;
+    /**
+     * 
      * @type {number}
      * @memberof GetLeech
      */
@@ -30,12 +36,6 @@ export interface GetLeech {
      * @memberof GetLeech
      */
     name: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetLeech
-     */
-    address: string;
 }
 
 export function GetLeechFromJSON(json: any): GetLeech {
@@ -48,9 +48,9 @@ export function GetLeechFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     }
     return {
 
+        'address': json['address'],
         'id': json['id'],
         'name': json['name'],
-        'address': json['address'],
     };
 }
 
@@ -63,8 +63,8 @@ export function GetLeechToJSON(value?: GetLeech | null): any {
     }
     return {
 
+        'address': value.address,
         'id': value.id,
         'name': value.name,
-        'address': value.address,
     };
 }

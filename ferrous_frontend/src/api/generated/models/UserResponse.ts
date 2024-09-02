@@ -13,41 +13,51 @@
 
 import { exists, mapValues } from '../runtime';
 /**
+ * This struct holds the user information.
  * 
+ * Note that `username` is unique, but as it is changeable,
+ * identify the user by its `uuid`
  * @export
- * @interface LoginRequest
+ * @interface UserResponse
  */
-export interface LoginRequest {
+export interface UserResponse {
     /**
      * 
      * @type {string}
-     * @memberof LoginRequest
+     * @memberof UserResponse
      */
-    password: string;
+    displayName: string;
     /**
      * 
      * @type {string}
-     * @memberof LoginRequest
+     * @memberof UserResponse
      */
     username: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserResponse
+     */
+    uuid: string;
 }
 
-export function LoginRequestFromJSON(json: any): LoginRequest {
-    return LoginRequestFromJSONTyped(json, false);
+export function UserResponseFromJSON(json: any): UserResponse {
+    return UserResponseFromJSONTyped(json, false);
 }
 
-export function LoginRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoginRequest {
+export function UserResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): UserResponse {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
 
-        'password': json['password'],
+        'displayName': json['display_name'],
         'username': json['username'],
+        'uuid': json['uuid'],
     };
 }
 
-export function LoginRequestToJSON(value?: LoginRequest | null): any {
+export function UserResponseToJSON(value?: UserResponse | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -56,8 +66,8 @@ export function LoginRequestToJSON(value?: LoginRequest | null): any {
     }
     return {
 
-        'password': value.password,
+        'display_name': value.displayName,
         'username': value.username,
+        'uuid': value.uuid,
     };
 }
-

@@ -20,22 +20,16 @@ import { exists, mapValues } from '../runtime';
 export interface QueryCertificateTransparencyRequest {
     /**
      * 
-     * @type {number}
-     * @memberof QueryCertificateTransparencyRequest
-     */
-    leechId: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof QueryCertificateTransparencyRequest
-     */
-    target: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof QueryCertificateTransparencyRequest
      */
     includeExpired: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof QueryCertificateTransparencyRequest
+     */
+    leechId: number;
     /**
      * 
      * @type {number}
@@ -48,6 +42,12 @@ export interface QueryCertificateTransparencyRequest {
      * @memberof QueryCertificateTransparencyRequest
      */
     retryInterval: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof QueryCertificateTransparencyRequest
+     */
+    target: string;
 }
 
 export function QueryCertificateTransparencyRequestFromJSON(json: any): QueryCertificateTransparencyRequest {
@@ -60,11 +60,11 @@ export function QueryCertificateTransparencyRequestFromJSONTyped(json: any, igno
     }
     return {
 
-        'leechId': json['leech_id'],
-        'target': json['target'],
         'includeExpired': json['include_expired'],
+        'leechId': json['leech_id'],
         'maxRetries': json['max_retries'],
         'retryInterval': json['retry_interval'],
+        'target': json['target'],
     };
 }
 
@@ -77,10 +77,10 @@ export function QueryCertificateTransparencyRequestToJSON(value?: QueryCertifica
     }
     return {
 
-        'leech_id': value.leechId,
-        'target': value.target,
         'include_expired': value.includeExpired,
+        'leech_id': value.leechId,
         'max_retries': value.maxRetries,
         'retry_interval': value.retryInterval,
+        'target': value.target,
     };
 }
