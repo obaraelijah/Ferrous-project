@@ -25,13 +25,13 @@ export interface UpdateWorkspaceRequest {
      * @type {string}
      * @memberof UpdateWorkspaceRequest
      */
-    description: string | null;
+    description?: string | null;
     /**
      * 
      * @type {string}
      * @memberof UpdateWorkspaceRequest
      */
-    name: string | null;
+    name?: string | null;
 }
 
 export function UpdateWorkspaceRequestFromJSON(json: any): UpdateWorkspaceRequest {
@@ -44,8 +44,8 @@ export function UpdateWorkspaceRequestFromJSONTyped(json: any, ignoreDiscriminat
     }
     return {
 
-        'description': json['description'],
-        'name': json['name'],
+        'description': !exists(json, 'description') ? undefined : json['description'],
+        'name': !exists(json, 'name') ? undefined : json['name'],
     };
 }
 

@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * The response of an attack
  * @export
  * @interface AttackResponse
  */
