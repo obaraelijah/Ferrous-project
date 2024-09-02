@@ -1,13 +1,17 @@
 import React from "react";
 import { Api } from "../api/api";
 import { toast } from "react-toastify";
+
 import "../styling/login.css";
 import Input from "../components/input";
+import { ROUTES } from "../routes";
+
 type LoginProps = {};
 type LoginState = {
     username: string;
     password: string;
 };
+
 export default class Login extends React.Component<LoginProps, LoginState> {
     constructor(props: LoginProps) {
         super(props);
@@ -20,7 +24,10 @@ export default class Login extends React.Component<LoginProps, LoginState> {
     async performLogin(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         (await Api.auth.login(this.state.username, this.state.password)).match(
-            async (_) => toast.success("Authenticated successfully"),
+            async (_) => {
+                toast.success("Authenticated successfully");
+                ROUTES.HOME.visit({});
+            },
             (err) => toast.error(err.message)
         );
     }
