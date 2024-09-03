@@ -10,7 +10,7 @@ use crate::api::handler::{
     update_workspace, websocket,
 };
 use crate::api::middleware::{
-    handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired,
+    handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired, TokenRequired,
 };
 use crate::api::swagger::ApiDoc;
 use crate::chan::{RpcClients, RpcManagerChannel, WsManagerChan};
@@ -60,6 +60,7 @@ pub(crate) async fn start_server(
         .build()?,
     );
 
+    let reporting_key = config.server.reporting_key.clone();
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(db.clone()))
@@ -81,6 +82,11 @@ pub(crate) async fn start_server(
             .wrap(Compress::default())
             .wrap(ErrorHandlers::new().handler(StatusCode::NOT_FOUND, handle_not_found))
             .service(SwaggerUi::new("/docs/{_:.*}").url("/api-doc/openapi.json", ApiDoc::openapi()))
+            .service(
+                scope("/api/v1/reporting")
+                    .wrap(TokenRequired(reporting_key.clone()))
+                    .service(report_workspace_results),
+            )
             .service(
                 scope("/api/v1/auth")
                     .service(test)
@@ -120,8 +126,7 @@ pub(crate) async fn start_server(
                     .service(update_workspace)
                     .service(bruteforce_subdomains)
                     .service(scan_tcp_ports)
-                    .service(query_certificate_transparency)
-                    .service(report_workspace_results),
+                    .service(query_certificate_transparency),
             )
     })
     .bind((

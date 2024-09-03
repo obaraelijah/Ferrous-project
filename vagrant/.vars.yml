@@ -3,6 +3,7 @@
   ferrous_db_password: ""
   ferrous_secret_key: ""
   origin_uri: "https://ferrous.test"
+  ferrous_reporting_key: ""
   server_name: "ferrous.test"
   leech_db_name: "leech"
   leech_db_user: "leech"
