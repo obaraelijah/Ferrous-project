@@ -4,38 +4,41 @@ import { toast } from "react-toastify";
 
 import "../styling/login.css";
 import Input from "../components/input";
-import { ROUTES } from "../routes";
+import { okOrToast } from "../utils/helper";
 
-type LoginProps = {};
+type LoginProps = {
+    onLogin(): void;
+};
 type LoginState = {
     username: string;
     password: string;
 };
 
 export default class Login extends React.Component<LoginProps, LoginState> {
-    constructor(props: LoginProps) {
-        super(props);
-        this.state = {
-            username: "",
-            password: "",
-        };
-        this.performLogin = this.performLogin.bind(this);
-    }
-    async performLogin(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        (await Api.auth.login(this.state.username, this.state.password)).match(
-            async (_) => {
+    state: LoginState = {
+        username: "",
+        password: "",
+    };
+    performLogin() {
+        Api.auth.login(this.state.username, this.state.password).then(
+            okOrToast(() => {
                 toast.success("Authenticated successfully");
-                ROUTES.HOME.visit({});
-            },
-            (err) => toast.error(err.message)
+                this.props.onLogin();
+            })
         );
     }
     render() {
         return (
             <>
                 <div className="login-container">
-                    <form className="pane login" method="post" onSubmit={this.performLogin}>
+                    <form
+                            className="pane login"
+                            method="post"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                this.performLogin();
+                            }}
+                        >
                         <svg
                             className="neon cyber-login"
                             xmlns="http://www.w3.org/2000/svg"
