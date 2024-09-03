@@ -5,6 +5,8 @@ use std::{fs, io};
 
 use serde::{Deserialize, Serialize};
 
+use crate::logging::LoggingConfig;
+
 /// The configuration of the server part
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
@@ -41,6 +43,10 @@ pub struct Config {
     pub server: ServerConfig,
     /// Database configuration
     pub database: DBConfig,
+    /// Logging configuration
+    ///
+    /// Only used in the [`server`](crate::Command::Server) command
+    pub logging: LoggingConfig,
 }
 
 /// Errors that can occur while

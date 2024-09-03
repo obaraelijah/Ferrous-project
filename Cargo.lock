@@ -1922,6 +1922,7 @@ dependencies = [
 name = "leech"
 version = "0.1.0"
 dependencies = [
+ "byte-unit",
  "chrono",
  "clap",
  "env_logger",
@@ -1929,6 +1930,7 @@ dependencies = [
  "ipnet",
  "itertools",
  "log",
+ "log4rs",
  "once_cell",
  "prost",
  "prost-types",
@@ -1947,6 +1949,7 @@ dependencies = [
  "tonic-build",
  "trust-dns-resolver",
  "url",
+ "uuid",
 ]
 
 [[package]]
