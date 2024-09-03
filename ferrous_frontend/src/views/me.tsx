@@ -4,7 +4,7 @@ import { Api } from "../api/api";
 import { toast } from "react-toastify";
 import "../styling/me.css";
 import Input from "../components/input";
-import { check } from "../utils/helper";
+import { check, handleApiError } from "../utils/helper";
 import USER_CONTEXT, { resetUser } from "../context/user";
 
 type MeProps = {};
@@ -70,14 +70,11 @@ export default class Me extends React.Component<MeProps, MeState> {
             ])
         )
             return;
-        Api.user.setPassword(oldPwd, newPwd).then((result) =>
-            result.match(
-                () => {
+            Api.user.setPassword(oldPwd, newPwd).then(
+                handleApiError(() => {
                     toast.success("Changed password successfully");
                     resetUser();
-                },
-                (err) => toast.error(err.message)
-            )
+                })
         );
     }
 }
