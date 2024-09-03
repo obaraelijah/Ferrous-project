@@ -1,17 +1,15 @@
 import React from "react";
-import { GetUser } from "../api/generated/models";
+
 import { Api } from "../api/api";
 import { toast } from "react-toastify";
 import "../styling/me.css";
 import Input from "../components/input";
 import { ROUTES } from "../routes";
 import { check } from "../utils/helper";
-import Loading from "../components/loading";
+import { USER_CONTEXT } from "../context/user";
 
 type MeProps = {};
 type MeState = {
-    // queried data
-    user?: GetUser;
 
     // controlled state
     /** Old password */
@@ -29,23 +27,17 @@ export default class Me extends React.Component<MeProps, MeState> {
         repPwd: "",
     };
 
-    componentDidMount() {
-        Api.user.get().then((result) =>
-            result.match(
-                (user) => this.setState({ user }),
-                (err) => toast.error(err.message)
-            )
-        );
-    }
+    static contextType = USER_CONTEXT;
+    declare context: React.ContextType<typeof USER_CONTEXT>;
 
     render() {
-        const user = this.state.user;
-        if (user === undefined) return <Loading />;
-        
+        const { user } = this.context;
+
         return (
             <div className="pane me">
                 <h1 className="heading neon">{user.displayName}</h1>
                 <h2 className="heading neon">{user.username}</h2>
+                {user.admin ? <h3 className="heading neon">{"<Admin>"}</h3> : null}
                 <hr />
                 <form
                     className="change-pwd"
@@ -59,7 +51,7 @@ export default class Me extends React.Component<MeProps, MeState> {
                     <Input type="password" value={this.state.oldPwd} onChange={(oldPwd: any) => this.setState({ oldPwd })} />
                     <label>New Password:</label>
                     <Input type="password" value={this.state.newPwd} onChange={(newPwd: any) => this.setState({ newPwd })} />
-                    <label>New Password (repeated):</label>
+                    <label>Confirm Password (repeated):</label>
                     <Input type="password" value={this.state.repPwd} onChange={(repPwd: any) => this.setState({ repPwd })} />
                     <button type="submit" className="button">
                         Change
