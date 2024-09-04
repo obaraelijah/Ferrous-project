@@ -17,7 +17,7 @@ import type {
     ApiErrorResponse,
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
-    GetWorkspace,
+    FullWorkspace,
     GetWorkspaceResponse,
     UpdateWorkspaceRequest,
   } from '../models';
@@ -28,8 +28,8 @@ import {
     CreateWorkspaceRequestToJSON,
     CreateWorkspaceResponseFromJSON,
     CreateWorkspaceResponseToJSON,
-    GetWorkspaceFromJSON,
-    GetWorkspaceToJSON,
+    FullWorkspaceFromJSON,
+    FullWorkspaceToJSON,
     GetWorkspaceResponseFromJSON,
     GetWorkspaceResponseToJSON,
     UpdateWorkspaceRequestFromJSON,
@@ -156,7 +156,7 @@ export class WorkspacesApi extends runtime.BaseAPI {
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspaceRaw(requestParameters: GetWorkspaceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetWorkspace>> {
+    async getWorkspaceRaw(requestParameters: GetWorkspaceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FullWorkspace>> {
         if (requestParameters.id === null || requestParameters.id === undefined) {
             throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling getWorkspace.');
         }
@@ -172,14 +172,14 @@ export class WorkspacesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetWorkspaceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => FullWorkspaceFromJSON(jsonValue));
     }
 
     /**
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspace(requestParameters: GetWorkspaceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetWorkspace> {
+    async getWorkspace(requestParameters: GetWorkspaceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FullWorkspace> {
         const response = await this.getWorkspaceRaw(requestParameters, initOverrides);
         return await response.value();
     }

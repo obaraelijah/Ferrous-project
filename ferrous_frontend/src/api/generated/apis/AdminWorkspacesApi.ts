@@ -15,14 +15,14 @@
 import * as runtime from '../runtime';
 import type {
     ApiErrorResponse,
-    GetWorkspace,
+    FullWorkspace,
     GetWorkspaceResponse,
   } from '../models';
 import {
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
-    GetWorkspaceFromJSON,
-    GetWorkspaceToJSON,
+    FullWorkspaceFromJSON,
+    FullWorkspaceToJSON,
     GetWorkspaceResponseFromJSON,
     GetWorkspaceResponseToJSON,
 } from '../models';
@@ -68,9 +68,9 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspaceAdminRaw(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetWorkspace>> {
-        if (requestParameters.id === null || requestParameters.id === undefined) {
-            throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling getWorkspaceAdmin.');
+    async getWorkspaceAdminRaw(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FullWorkspace>> {
+        if (requestParameters.id === null || requestParameters.id === undefined) {    
+        throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling getWorkspaceAdmin.');
         }
 
         const queryParameters: any = {};
@@ -84,14 +84,14 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => GetWorkspaceFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => FullWorkspaceFromJSON(jsonValue));
     }
 
     /**
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspaceAdmin(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetWorkspace> {
+    async getWorkspaceAdmin(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FullWorkspace> {
         const response = await this.getWorkspaceAdminRaw(requestParameters, initOverrides);
         return await response.value();
     }
