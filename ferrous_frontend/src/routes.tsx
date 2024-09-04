@@ -6,6 +6,7 @@ import AdminUsers from "./views/admin/users";
 import AdminWorkspaces from "./views/admin/workspaces";
 import Workspaces from "./views/workspaces";
 import AdminGuard from "./components/admin-guard";
+import Attacks from "./views/attacks";
 
 export const ROUTER = new Router();
 
@@ -13,7 +14,8 @@ export const ROUTES = {
     HOME: ROUTER.add({ url: "", parser: {}, render: () => <Home /> }),
     ME: ROUTER.add({ url: "me", parser: {}, render: () => <Me /> }),
     WORKSPACES: ROUTER.add({ url: "workspaces", parser: {}, render: () => <Workspaces /> }),
-    
+    ATTACKS: ROUTER.add({ url: "attacks", parser: {}, render: () => <Attacks /> }),
+
     FERROUS_NETWORK: ROUTER.add({
         url: "ferrous-network",
         parser: {},
