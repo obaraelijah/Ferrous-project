@@ -12,12 +12,6 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import {
-    FinishRegisterRequestAllOf,
-    FinishRegisterRequestAllOfFromJSON,
-    FinishRegisterRequestAllOfFromJSONTyped,
-    FinishRegisterRequestAllOfToJSON,
-} from './';
 
 /**
  * 
@@ -31,6 +25,16 @@ export interface FinishRegisterRequest {
      * @memberof FinishRegisterRequest
      */
     name: string;
+}
+
+/**
+ * Check if a given object implements the FinishRegisterRequest interface.
+ */
+export function instanceOfFinishRegisterRequest(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+
+    return isInstance;
 }
 
 export function FinishRegisterRequestFromJSON(json: any): FinishRegisterRequest {

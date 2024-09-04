@@ -12,12 +12,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { GetLeech } from './GetLeech';
 import {
-    GetLeech,
     GetLeechFromJSON,
     GetLeechFromJSONTyped,
     GetLeechToJSON,
-} from './';
+} from './GetLeech';
 
 /**
  * 
@@ -31,6 +31,16 @@ export interface GetLeechResponse {
      * @memberof GetLeechResponse
      */
     leeches: Array<GetLeech>;
+}
+
+/**
+ * Check if a given object implements the GetLeechResponse interface.
+ */
+export function instanceOfGetLeechResponse(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "leeches" in value;
+
+    return isInstance;
 }
 
 export function GetLeechResponseFromJSON(json: any): GetLeechResponse {

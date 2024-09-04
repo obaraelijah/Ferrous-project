@@ -15,66 +15,58 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface CreateUserRequest
+ * @interface ReportingUser
  */
-export interface CreateUserRequest {
+export interface ReportingUser {
     /**
-     * 
+     * The user's id
      * @type {string}
-     * @memberof CreateUserRequest
+     * @memberof ReportingUser
+     */
+    uuid: string;
+    /**
+     * The user's login name
+     * @type {string}
+     * @memberof ReportingUser
      */
     username: string;
     /**
-     * 
+     * The user's legal name
      * @type {string}
-     * @memberof CreateUserRequest
+     * @memberof ReportingUser
      */
     displayName: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateUserRequest
-     */
-    password: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateUserRequest
-     */
-    admin: boolean;
 }
 
 /**
- * Check if a given object implements the CreateUserRequest interface.
+ * Check if a given object implements the ReportingUser interface.
  */
-export function instanceOfCreateUserRequest(value: object): boolean {
+export function instanceOfReportingUser(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "uuid" in value;
     isInstance = isInstance && "username" in value;
     isInstance = isInstance && "displayName" in value;
-    isInstance = isInstance && "password" in value;
-    isInstance = isInstance && "admin" in value;
 
     return isInstance;
 }
 
-export function CreateUserRequestFromJSON(json: any): CreateUserRequest {
-    return CreateUserRequestFromJSONTyped(json, false);
+export function ReportingUserFromJSON(json: any): ReportingUser {
+    return ReportingUserFromJSONTyped(json, false);
 }
 
-export function CreateUserRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateUserRequest {
+export function ReportingUserFromJSONTyped(json: any, ignoreDiscriminator: boolean): ReportingUser {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
 
+        'uuid': json['uuid'],
         'username': json['username'],
         'displayName': json['display_name'],
-        'password': json['password'],
-        'admin': json['admin'],
     };
 }
 
-export function CreateUserRequestToJSON(value?: CreateUserRequest | null): any {
+export function ReportingUserToJSON(value?: ReportingUser | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -83,9 +75,8 @@ export function CreateUserRequestToJSON(value?: CreateUserRequest | null): any {
     }
     return {
 
+        'uuid': value.uuid,
         'username': value.username,
         'display_name': value.displayName,
-        'password': value.password,
-        'admin': value.admin,
     };
 }

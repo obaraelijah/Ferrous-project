@@ -13,17 +13,19 @@
 
 
 import * as runtime from '../runtime';
-import {
+import type {
     ApiErrorResponse,
+    GetUser,
+    SetPasswordRequest,
+    UpdateMeRequest,
+  } from '../models';
+import {
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
-    GetUser,
     GetUserFromJSON,
     GetUserToJSON,
-    SetPasswordRequest,
     SetPasswordRequestFromJSON,
     SetPasswordRequestToJSON,
-    UpdateMeRequest,
     UpdateMeRequestFromJSON,
     UpdateMeRequestToJSON,
 } from '../models';
@@ -45,7 +47,7 @@ export class UserManagementApi extends runtime.BaseAPI {
      * Retrieve the own user
      * Retrieve the own user
      */
-    async getMeRaw(): Promise<runtime.ApiResponse<GetUser>> {
+    async getMeRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetUser>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -55,7 +57,7 @@ export class UserManagementApi extends runtime.BaseAPI {
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GetUserFromJSON(jsonValue));
     }
@@ -64,8 +66,8 @@ export class UserManagementApi extends runtime.BaseAPI {
      * Retrieve the own user
      * Retrieve the own user
      */
-    async getMe(): Promise<GetUser> {
-        const response = await this.getMeRaw();
+    async getMe(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetUser> {
+        const response = await this.getMeRaw(initOverrides);
         return await response.value();
     }
 
@@ -73,7 +75,7 @@ export class UserManagementApi extends runtime.BaseAPI {
      * Set a new password
      * Set a new password
      */
-    async setPasswordRaw(requestParameters: SetPasswordOperationRequest): Promise<runtime.ApiResponse<void>> {
+    async setPasswordRaw(requestParameters: SetPasswordOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.setPasswordRequest === null || requestParameters.setPasswordRequest === undefined) {
             throw new runtime.RequiredError('setPasswordRequest','Required parameter requestParameters.setPasswordRequest was null or undefined when calling setPassword.');
         }
@@ -90,7 +92,7 @@ export class UserManagementApi extends runtime.BaseAPI {
             headers: headerParameters,
             query: queryParameters,
             body: SetPasswordRequestToJSON(requestParameters.setPasswordRequest),
-        });
+        }, initOverrides);s
 
         return new runtime.VoidApiResponse(response);
     }
@@ -99,15 +101,15 @@ export class UserManagementApi extends runtime.BaseAPI {
      * Set a new password
      * Set a new password
      */
-    async setPassword(requestParameters: SetPasswordOperationRequest): Promise<void> {
-        await this.setPasswordRaw(requestParameters);
+    async setPassword(requestParameters: SetPasswordOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.setPasswordRaw(requestParameters, initOverrides);
     }
 
     /**
      * Updates the own user  All parameters are optional, but at least one of them must be supplied.
      * Updates the own user
      */
-    async updateMeRaw(requestParameters: UpdateMeOperationRequest): Promise<runtime.ApiResponse<void>> {
+    async updateMeRaw(requestParameters: UpdateMeOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.updateMeRequest === null || requestParameters.updateMeRequest === undefined) {
             throw new runtime.RequiredError('updateMeRequest','Required parameter requestParameters.updateMeRequest was null or undefined when calling updateMe.');
         }
@@ -124,7 +126,7 @@ export class UserManagementApi extends runtime.BaseAPI {
             headers: headerParameters,
             query: queryParameters,
             body: UpdateMeRequestToJSON(requestParameters.updateMeRequest),
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -133,8 +135,8 @@ export class UserManagementApi extends runtime.BaseAPI {
      * Updates the own user  All parameters are optional, but at least one of them must be supplied.
      * Updates the own user
      */
-    async updateMe(requestParameters: UpdateMeOperationRequest): Promise<void> {
-        await this.updateMeRaw(requestParameters);
+    async updateMe(requestParameters: UpdateMeOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.updateMeRaw(requestParameters, initOverrides);
     }
 
 }

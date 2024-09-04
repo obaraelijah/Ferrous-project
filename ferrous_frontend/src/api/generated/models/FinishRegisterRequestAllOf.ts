@@ -26,6 +26,17 @@ export interface FinishRegisterRequestAllOf {
     name: string;
 }
 
+
+/**
+ * Check if a given object implements the FinishRegisterRequestAllOf interface.
+ */
+export function instanceOfFinishRegisterRequestAllOf(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+
+    return isInstance;
+}
+
 export function FinishRegisterRequestAllOfFromJSON(json: any): FinishRegisterRequestAllOf {
     return FinishRegisterRequestAllOfFromJSONTyped(json, false);
 }

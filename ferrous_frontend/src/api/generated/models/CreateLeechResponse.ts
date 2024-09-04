@@ -26,6 +26,17 @@ export interface CreateLeechResponse {
     id: number;
 }
 
+
+/**
+ * Check if a given object implements the CreateLeechResponse interface.
+ */
+export function instanceOfCreateLeechResponse(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "id" in value;
+
+    return isInstance;
+}
+
 export function CreateLeechResponseFromJSON(json: any): CreateLeechResponse {
     return CreateLeechResponseFromJSONTyped(json, false);
 }

@@ -25,14 +25,24 @@ export interface UpdateWorkspaceRequest {
      * @type {string}
      * @memberof UpdateWorkspaceRequest
      */
-    description?: string | null;
+    name?: string | null;
     /**
      * 
      * @type {string}
      * @memberof UpdateWorkspaceRequest
      */
-    name?: string | null;
+    description?: string | null;
 }
+
+/**
+ * Check if a given object implements the UpdateWorkspaceRequest interface.
+ */
+export function instanceOfUpdateWorkspaceRequest(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
+}
+
 
 export function UpdateWorkspaceRequestFromJSON(json: any): UpdateWorkspaceRequest {
     return UpdateWorkspaceRequestFromJSONTyped(json, false);
@@ -44,8 +54,8 @@ export function UpdateWorkspaceRequestFromJSONTyped(json: any, ignoreDiscriminat
     }
     return {
 
-        'description': !exists(json, 'description') ? undefined : json['description'],
         'name': !exists(json, 'name') ? undefined : json['name'],
+        'description': !exists(json, 'description') ? undefined : json['description'],
     };
 }
 
@@ -58,7 +68,7 @@ export function UpdateWorkspaceRequestToJSON(value?: UpdateWorkspaceRequest | nu
     }
     return {
 
-        'description': value.description,
         'name': value.name,
+        'description': value.description,
     };
 }

@@ -12,12 +12,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { UserResponse } from './UserResponse';
 import {
-    UserResponse,
     UserResponseFromJSON,
     UserResponseFromJSONTyped,
     UserResponseToJSON,
-} from './';
+} from './UserResponse';
 
 /**
  * 
@@ -27,16 +27,16 @@ import {
 export interface GetWorkspace {
     /**
      * 
-     * @type {string}
-     * @memberof GetWorkspace
-     */
-    description?: string | null;
-    /**
-     * 
      * @type {number}
      * @memberof GetWorkspace
      */
     id: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetWorkspace
+     */
+    description?: string | null;
     /**
      * 
      * @type {string}
@@ -51,6 +51,19 @@ export interface GetWorkspace {
     owner: UserResponse;
 }
 
+/**
+ * Check if a given object implements the GetWorkspace interface.
+ */
+export function instanceOfGetWorkspace(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "owner" in value;
+
+    return isInstance;
+}
+
+
 export function GetWorkspaceFromJSON(json: any): GetWorkspace {
     return GetWorkspaceFromJSONTyped(json, false);
 }
@@ -61,9 +74,9 @@ export function GetWorkspaceFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
 
-        'description': !exists(json, 'description') ? undefined : json['description'],
         'id': json['id'],
         'name': json['name'],
+        'description': !exists(json, 'description') ? undefined : json['description'],
         'owner': UserResponseFromJSON(json['owner']),
     };
 }
@@ -77,9 +90,9 @@ export function GetWorkspaceToJSON(value?: GetWorkspace | null): any {
     }
     return {
 
-        'description': value.description,
         'id': value.id,
         'name': value.name,
+        'description': value.description,
         'owner': UserResponseToJSON(value.owner),
     };
 }

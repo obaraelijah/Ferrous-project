@@ -13,14 +13,16 @@
 
 
 import * as runtime from '../runtime';
-import {
+import type {
     ApiErrorResponse,
+    FinishRegisterRequest,
+    LoginRequest,
+  } from '../models';
+import {
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
-    FinishRegisterRequest,
     FinishRegisterRequestFromJSON,
     FinishRegisterRequestToJSON,
-    LoginRequest,
     LoginRequestFromJSON,
     LoginRequestToJSON,
 } from '../models';
@@ -46,7 +48,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Finishes the authentication with a security key  Use `startAuth` to retrieve the challenge response data.
      * Finishes the authentication with a security key
      */
-    async finishAuthRaw(requestParameters: FinishAuthRequest): Promise<runtime.ApiResponse<void>> {
+    async finishAuthRaw(requestParameters: FinishAuthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.body === null || requestParameters.body === undefined) {
             throw new runtime.RequiredError('body','Required parameter requestParameters.body was null or undefined when calling finishAuth.');
         }
@@ -63,7 +65,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             headers: headerParameters,
             query: queryParameters,
             body: requestParameters.body as any,
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -72,15 +74,15 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Finishes the authentication with a security key  Use `startAuth` to retrieve the challenge response data.
      * Finishes the authentication with a security key
      */
-    async finishAuth(requestParameters: FinishAuthRequest): Promise<void> {
-        await this.finishAuthRaw(requestParameters);
+    async finishAuth(requestParameters: FinishAuthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.finishAuthRaw(requestParameters, initOverrides);
     }
 
     /**
      * Finish the registration of a security key  Use `startRegister` to retrieve the challenge response data.
      * Finish the registration of a security key
      */
-    async finishRegisterRaw(requestParameters: FinishRegisterOperationRequest): Promise<runtime.ApiResponse<void>> {
+    async finishRegisterRaw(requestParameters: FinishRegisterOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.finishRegisterRequest === null || requestParameters.finishRegisterRequest === undefined) {
             throw new runtime.RequiredError('finishRegisterRequest','Required parameter requestParameters.finishRegisterRequest was null or undefined when calling finishRegister.');
         }
@@ -97,7 +99,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             headers: headerParameters,
             query: queryParameters,
             body: FinishRegisterRequestToJSON(requestParameters.finishRegisterRequest),
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -106,15 +108,15 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Finish the registration of a security key  Use `startRegister` to retrieve the challenge response data.
      * Finish the registration of a security key
      */
-    async finishRegister(requestParameters: FinishRegisterOperationRequest): Promise<void> {
-        await this.finishRegisterRaw(requestParameters);
+    async finishRegister(requestParameters: FinishRegisterOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.finishRegisterRaw(requestParameters, initOverrides);
     }
 
     /**
      * Login to ferrous
      * Login to ferrous
      */
-    async loginRaw(requestParameters: LoginOperationRequest): Promise<runtime.ApiResponse<void>> {
+    async loginRaw(requestParameters: LoginOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters.loginRequest === null || requestParameters.loginRequest === undefined) {
             throw new runtime.RequiredError('loginRequest','Required parameter requestParameters.loginRequest was null or undefined when calling login.');
         }
@@ -131,7 +133,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             headers: headerParameters,
             query: queryParameters,
             body: LoginRequestToJSON(requestParameters.loginRequest),
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -140,15 +142,15 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Login to ferrous
      * Login to ferrous
      */
-    async login(requestParameters: LoginOperationRequest): Promise<void> {
-        await this.loginRaw(requestParameters);
+    async login(requestParameters: LoginOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.loginRaw(requestParameters, initOverrides);
     }
 
     /**
      * Log out of this session  Logs a logged-in user out of his session.
      * Log out of this session
      */
-    async logoutRaw(): Promise<runtime.ApiResponse<void>> {
+    async logoutRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -158,7 +160,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -167,15 +169,15 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Log out of this session  Logs a logged-in user out of his session.
      * Log out of this session
      */
-    async logout(): Promise<void> {
-        await this.logoutRaw();
+    async logout(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.logoutRaw(initOverrides);
     }
 
     /**
      * Starts the authentication with a security key  Use the `login` endpoint before calling this one.  Proceed with `finishAuth`.
      * Starts the authentication with a security key
      */
-    async startAuthRaw(): Promise<runtime.ApiResponse<object>> {
+    async startAuthRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -185,7 +187,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
     }
@@ -194,8 +196,8 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Starts the authentication with a security key  Use the `login` endpoint before calling this one.  Proceed with `finishAuth`.
      * Starts the authentication with a security key
      */
-    async startAuth(): Promise<object> {
-        const response = await this.startAuthRaw();
+    async startAuth(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+        const response = await this.startAuthRaw(initOverrides);
         return await response.value();
     }
 
@@ -203,7 +205,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Start the registration of a security key  Proceed to the `finishRegister` endpoint.
      * Start the registration of a security key
      */
-    async startRegisterRaw(): Promise<runtime.ApiResponse<object>> {
+    async startRegisterRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -213,7 +215,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
     }
@@ -222,8 +224,8 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Start the registration of a security key  Proceed to the `finishRegister` endpoint.
      * Start the registration of a security key
      */
-    async startRegister(): Promise<object> {
-        const response = await this.startRegisterRaw();
+    async startRegister(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+        const response = await this.startRegisterRaw(initOverrides);
         return await response.value();
     }
 
@@ -231,7 +233,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Test the current login state  You can use this endpoint to test the current login state of your client.  If logged in, a 200 without a body is returned.
      * Test the current login state
      */
-    async testRaw(): Promise<runtime.ApiResponse<void>> {
+    async testRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -241,7 +243,7 @@ export class AuthenticationApi extends runtime.BaseAPI {
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -250,8 +252,8 @@ export class AuthenticationApi extends runtime.BaseAPI {
      * Test the current login state  You can use this endpoint to test the current login state of your client.  If logged in, a 200 without a body is returned.
      * Test the current login state
      */
-    async test(): Promise<void> {
-        await this.testRaw();
+    async test(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.testRaw(initOverrides);
     }
 
 }

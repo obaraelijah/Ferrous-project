@@ -23,6 +23,12 @@ export interface UpdateLeechRequest {
      * @type {string}
      * @memberof UpdateLeechRequest
      */
+    name?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateLeechRequest
+     */
     address?: string | null;
     /**
      * 
@@ -30,12 +36,15 @@ export interface UpdateLeechRequest {
      * @memberof UpdateLeechRequest
      */
     description?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateLeechRequest
-     */
-    name?: string | null;
+}
+
+/**
+ * Check if a given object implements the UpdateLeechRequest interface.
+ */
+export function instanceOfUpdateLeechRequest(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function UpdateLeechRequestFromJSON(json: any): UpdateLeechRequest {
@@ -48,9 +57,9 @@ export function UpdateLeechRequestFromJSONTyped(json: any, ignoreDiscriminator: 
     }
     return {
 
+        'name': !exists(json, 'name') ? undefined : json['name'],
         'address': !exists(json, 'address') ? undefined : json['address'],
         'description': !exists(json, 'description') ? undefined : json['description'],
-        'name': !exists(json, 'name') ? undefined : json['name'],
     };
 }
 
@@ -63,8 +72,8 @@ export function UpdateLeechRequestToJSON(value?: UpdateLeechRequest | null): any
     }
     return {
 
+        'name': value.name,
         'address': value.address,
         'description': value.description,
-        'name': value.name,
     };
 }

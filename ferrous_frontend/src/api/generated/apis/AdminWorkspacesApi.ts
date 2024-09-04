@@ -13,14 +13,16 @@
 
 
 import * as runtime from '../runtime';
-import {
+import type {
     ApiErrorResponse,
+    GetWorkspace,
+    GetWorkspaceResponse,
+  } from '../models';
+import {
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
-    GetWorkspace,
     GetWorkspaceFromJSON,
     GetWorkspaceToJSON,
-    GetWorkspaceResponse,
     GetWorkspaceResponseFromJSON,
     GetWorkspaceResponseToJSON,
 } from '../models';
@@ -38,7 +40,7 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
      * Retrieve all workspaces
      * Retrieve all workspaces
      */
-    async getAllWorkspacesAdminRaw(): Promise<runtime.ApiResponse<GetWorkspaceResponse>> {
+    async getAllWorkspacesAdminRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetWorkspaceResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -48,7 +50,7 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GetWorkspaceResponseFromJSON(jsonValue));
     }
@@ -57,8 +59,8 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
      * Retrieve all workspaces
      * Retrieve all workspaces
      */
-    async getAllWorkspacesAdmin(): Promise<GetWorkspaceResponse> {
-        const response = await this.getAllWorkspacesAdminRaw();
+    async getAllWorkspacesAdmin(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetWorkspaceResponse> {
+        const response = await this.getAllWorkspacesAdminRaw(initOverrides);
         return await response.value();
     }
 
@@ -66,7 +68,7 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspaceAdminRaw(requestParameters: GetWorkspaceAdminRequest): Promise<runtime.ApiResponse<GetWorkspace>> {
+    async getWorkspaceAdminRaw(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetWorkspace>> {
         if (requestParameters.id === null || requestParameters.id === undefined) {
             throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling getWorkspaceAdmin.');
         }
@@ -80,7 +82,7 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        });
+        }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => GetWorkspaceFromJSON(jsonValue));
     }
@@ -89,8 +91,8 @@ export class AdminWorkspacesApi extends runtime.BaseAPI {
      * Retrieve a workspace by id
      * Retrieve a workspace by id
      */
-    async getWorkspaceAdmin(requestParameters: GetWorkspaceAdminRequest): Promise<GetWorkspace> {
-        const response = await this.getWorkspaceAdminRaw(requestParameters);
+    async getWorkspaceAdmin(requestParameters: GetWorkspaceAdminRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetWorkspace> {
+        const response = await this.getWorkspaceAdminRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -12,12 +12,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import type { ApiStatusCode } from './ApiStatusCode';
 import {
-    ApiStatusCode,
     ApiStatusCodeFromJSON,
     ApiStatusCodeFromJSONTyped,
     ApiStatusCodeToJSON,
-} from './';
+} from './ApiStatusCode';
 
 /**
  * Representation of an error response
@@ -28,16 +28,27 @@ import {
 export interface ApiErrorResponse {
     /**
      * 
-     * @type {string}
-     * @memberof ApiErrorResponse
-     */
-    message: string;
-    /**
-     * 
      * @type {ApiStatusCode}
      * @memberof ApiErrorResponse
      */
     statusCode: ApiStatusCode;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiErrorResponse
+     */
+    message: string;
+}
+
+/**
+ * Check if a given object implements the ApiErrorResponse interface.
+ */
+export function instanceOfApiErrorResponse(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "statusCode" in value;
+    isInstance = isInstance && "message" in value;
+
+    return isInstance;
 }
 
 export function ApiErrorResponseFromJSON(json: any): ApiErrorResponse {
@@ -49,8 +60,9 @@ export function ApiErrorResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
         return json;
     }
     return {
-        'message': json['message'],
+
         'statusCode': ApiStatusCodeFromJSON(json['status_code']),
+        'message': json['message'],
     };
 }
 
@@ -63,7 +75,7 @@ export function ApiErrorResponseToJSON(value?: ApiErrorResponse | null): any {
     }
     return {
 
-        'message': value.message,
         'status_code': ApiStatusCodeToJSON(value.statusCode),
+        'message': value.message,
     };
 }

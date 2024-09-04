@@ -26,7 +26,7 @@ export interface UserResponse {
      * @type {string}
      * @memberof UserResponse
      */
-    displayName: string;
+    uuid: string;
     /**
      * 
      * @type {string}
@@ -38,7 +38,19 @@ export interface UserResponse {
      * @type {string}
      * @memberof UserResponse
      */
-    uuid: string;
+    displayName: string;
+}
+
+/**
+ * Check if a given object implements the UserResponse interface.
+ */
+export function instanceOfUserResponse(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "uuid" in value;
+    isInstance = isInstance && "username" in value;
+    isInstance = isInstance && "displayName" in value;
+
+    return isInstance;
 }
 
 export function UserResponseFromJSON(json: any): UserResponse {
@@ -51,9 +63,9 @@ export function UserResponseFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
 
-        'displayName': json['display_name'],
-        'username': json['username'],
         'uuid': json['uuid'],
+        'username': json['username'],
+        'displayName': json['display_name'],
     };
 }
 
@@ -66,8 +78,8 @@ export function UserResponseToJSON(value?: UserResponse | null): any {
     }
     return {
 
-        'display_name': value.displayName,
-        'username': value.username,
         'uuid': value.uuid,
+        'username': value.username,
+        'display_name': value.displayName,
     };
 }

@@ -26,6 +26,17 @@ export interface CreateWorkspaceResponse {
     id: number;
 }
 
+
+/**
+ * Check if a given object implements the CreateWorkspaceResponse interface.
+ */
+export function instanceOfCreateWorkspaceResponse(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "id" in value;
+
+    return isInstance;
+}
+
 export function CreateWorkspaceResponseFromJSON(json: any): CreateWorkspaceResponse {
     return CreateWorkspaceResponseFromJSONTyped(json, false);
 }

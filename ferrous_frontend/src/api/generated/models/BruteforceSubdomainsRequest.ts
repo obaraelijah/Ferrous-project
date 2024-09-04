@@ -23,7 +23,7 @@ export interface BruteforceSubdomainsRequest {
      * @type {number}
      * @memberof BruteforceSubdomainsRequest
      */
-    concurrentLimit: number;
+    leechId: number;
     /**
      * 
      * @type {string}
@@ -32,16 +32,36 @@ export interface BruteforceSubdomainsRequest {
     domain: string;
     /**
      * 
-     * @type {number}
-     * @memberof BruteforceSubdomainsRequest
-     */
-    leechId: number;
-    /**
-     * 
      * @type {string}
      * @memberof BruteforceSubdomainsRequest
      */
     wordlistPath: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BruteforceSubdomainsRequest
+     */
+    concurrentLimit: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BruteforceSubdomainsRequest
+     */
+    workspaceId: number;
+}
+
+/**
+ * Check if a given object implements the BruteforceSubdomainsRequest interface.
+ */
+export function instanceOfBruteforceSubdomainsRequest(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "leechId" in value;
+    isInstance = isInstance && "domain" in value;
+    isInstance = isInstance && "wordlistPath" in value;
+    isInstance = isInstance && "concurrentLimit" in value;
+    isInstance = isInstance && "workspaceId" in value;
+
+    return isInstance;
 }
 
 export function BruteforceSubdomainsRequestFromJSON(json: any): BruteforceSubdomainsRequest {
@@ -54,10 +74,11 @@ export function BruteforceSubdomainsRequestFromJSONTyped(json: any, ignoreDiscri
     }
     return {
 
-        'concurrentLimit': json['concurrent_limit'],
-        'domain': json['domain'],
         'leechId': json['leech_id'],
+        'domain': json['domain'],
         'wordlistPath': json['wordlist_path'],
+        'concurrentLimit': json['concurrent_limit'],
+        'workspaceId': json['workspace_id'],
     };
 }
 
@@ -70,9 +91,10 @@ export function BruteforceSubdomainsRequestToJSON(value?: BruteforceSubdomainsRe
     }
     return {
 
-        'concurrent_limit': value.concurrentLimit,
-        'domain': value.domain,
         'leech_id': value.leechId,
+        'domain': value.domain,
         'wordlist_path': value.wordlistPath,
+        'concurrent_limit': value.concurrentLimit,
+        'workspace_id': value.workspaceId,
     };
 }
