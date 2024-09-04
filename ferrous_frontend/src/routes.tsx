@@ -7,6 +7,7 @@ import AdminWorkspaces from "./views/admin/workspaces";
 import Workspaces from "./views/workspaces";
 import AdminGuard from "./components/admin-guard";
 import Attacks from "./views/attacks";
+import AttackResults from "./views/attack-results";
 
 export const ROUTER = new Router();
 
@@ -16,6 +17,11 @@ export const ROUTES = {
     WORKSPACES: ROUTER.add({ url: "workspaces", parser: {}, render: () => <Workspaces /> }),
     ATTACKS: ROUTER.add({ url: "attacks", parser: {}, render: () => <Attacks /> }),
 
+    ATTACK_RESULTS: ROUTER.add({
+        url: "attacks/{id}",
+        parser: { id: Number },
+        render: ({ id }) => <AttackResults attackId={id} />,
+    }),
     FERROUS_NETWORK: ROUTER.add({
         url: "ferrous-network",
         parser: {},
