@@ -43,7 +43,7 @@ export class BaseAPI {
         return this.withMiddleware<T>(...middlewares);
     }
 
-    protected async request(context: RequestOpts): Promise<Response> {
+    protected async request(context: RequestOpts, initOverrides: any): Promise<Response> {
         const { url, init } = this.createFetchParams(context);
         const response = await this.fetchApi(url, init);
         if (response.status >= 200 && response.status < 300) {
