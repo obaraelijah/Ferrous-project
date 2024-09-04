@@ -22,6 +22,8 @@ export const ROUTES = {
         parser: { id: Number },
         render: ({ id }) => <AttackResults attackId={id} />,
     }),
+    KNOWLEDGE_BASE: ROUTER.add({ url: "knowledge", parser: {}, render: () => undefined }),
+    
     FERROUS_NETWORK: ROUTER.add({
         url: "ferrous-network",
         parser: {},
