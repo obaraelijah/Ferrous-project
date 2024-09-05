@@ -27,10 +27,10 @@ import {
 export interface SimpleWorkspace {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof SimpleWorkspace
      */
-    id: number;
+    uuid: string;
     /**
      * 
      * @type {string}
@@ -62,7 +62,7 @@ export interface SimpleWorkspace {
  */
 export function instanceOfSimpleWorkspace(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "uuid" in value;
     isInstance = isInstance && "name" in value;
     isInstance = isInstance && "owner" in value;
     isInstance = isInstance && "createdAt" in value;
@@ -80,7 +80,7 @@ export function SimpleWorkspaceFromJSONTyped(json: any, ignoreDiscriminator: boo
     }
     return {
 
-        'id': json['id'],
+        'uuid': json['uuid'],
         'name': json['name'],
         'description': !exists(json, 'description') ? undefined : json['description'],
         'owner': UserResponseFromJSON(json['owner']),
@@ -97,7 +97,7 @@ export function SimpleWorkspaceToJSON(value?: SimpleWorkspace | null): any {
     }
     return {
 
-        'id': value.id,
+        'uuid': value.uuid,
         'name': value.name,
         'description': value.description,
         'owner': UserResponseToJSON(value.owner),

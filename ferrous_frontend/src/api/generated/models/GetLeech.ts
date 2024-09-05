@@ -20,10 +20,10 @@ import { exists, mapValues } from '../runtime';
 export interface GetLeech {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof GetLeech
      */
-    id: number;
+    uuid: string;
     /**
      * 
      * @type {string}
@@ -43,7 +43,7 @@ export interface GetLeech {
  */
 export function instanceOfGetLeech(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "id" in value;
+    isInstance = isInstance && "uuid" in value;
     isInstance = isInstance && "name" in value;
     isInstance = isInstance && "address" in value;
 
@@ -60,7 +60,7 @@ export function GetLeechFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     }
     return {
 
-        'id': json['id'],
+        uuid': json['uuid'],
         'name': json['name'],
         'address': json['address'],
     };
@@ -75,7 +75,7 @@ export function GetLeechToJSON(value?: GetLeech | null): any {
     }
     return {
 
-        'id': value.id,
+        'uuid': value.uuid,
         'name': value.name,
         'address': value.address,
     };

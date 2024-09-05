@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-use crate::api::handler::{query_user, ApiError, ApiResult, PathId, UserResponse};
+use crate::api::handler::{query_user, ApiError, ApiResult, PathUuid, UserResponse, UuidResponse};
 use crate::chan::{
     CertificateTransparencyEntry, RpcClients, WsManagerChan, WsManagerMessage, WsMessage,
 };
@@ -28,26 +28,17 @@ use crate::rpc::rpc_attacks;
 use crate::rpc::rpc_attacks::shared::dns_record::Record;
 use crate::rpc::rpc_attacks::CertificateTransparencyRequest;
 
-/// The response of an attack
-#[derive(Serialize, ToSchema)]
-pub struct AttackResponse {
-    #[schema(example = 1337)]
-    pub(crate) attack_id: i64,
-}
-
 /// The settings of a subdomain bruteforce request
 #[derive(Deserialize, ToSchema)]
 pub struct BruteforceSubdomainsRequest {
-    #[schema(example = 1)]
-    pub(crate) leech_id: u64,
+    pub(crate) leech_uuid: Uuid,
     #[schema(example = "example.com")]
     pub(crate) domain: String,
     #[schema(example = "/opt/wordlists/Discovery/DNS/subdomains-top1million-5000.txt")]
     pub(crate) wordlist_path: String,
     #[schema(example = 20)]
     pub(crate) concurrent_limit: u32,
-    #[schema(example = 1337)]
-    pub(crate) workspace_id: u32,
+    pub(crate) workspace_uuid: Uuid,
 }
 
 /// Bruteforce subdomains through a DNS wordlist attack
@@ -58,7 +49,7 @@ pub struct BruteforceSubdomainsRequest {
     tag = "Attacks",
     context_path = "/api/v1",
     responses(
-        (status = 202, description = "Attack scheduled", body = AttackResponse),
+        (status = 200, description = "Attack scheduled", body = AttackResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse)
     ),
@@ -73,22 +64,23 @@ pub async fn bruteforce_subdomains(
     rpc_clients: RpcClients,
     ws_manager_chan: Data<WsManagerChan>,
 ) -> ApiResult<HttpResponse> {
-    let uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
+    let user_uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
     let mut client = rpc_clients
         .get_ref()
         .read()
         .await
-        .get(&(req.leech_id as i64))
+        .get(&req.leech_uuid)
         .ok_or(ApiError::InvalidLeech)?
         .clone();
 
-    let id = insert!(db.as_ref(), AttackInsert)
+    let uuid = insert!(db.as_ref(), AttackInsert)
         .return_primary_key()
         .single(&AttackInsert {
+            uuid: Uuid::new_v4(),
             attack_type: AttackType::BruteforceSubdomains,
-            started_from: ForeignModelByField::Key(uuid),
-            workspace: ForeignModelByField::Key(req.workspace_id as i64),
+            started_by: ForeignModelByField::Key(user_uuid),
+            workspace: ForeignModelByField::Key(req.workspace_uuid),
             finished_at: None,
         })
         .await?;
@@ -96,7 +88,7 @@ pub async fn bruteforce_subdomains(
     // start attack
     tokio::spawn(async move {
         let req = rpc_attacks::BruteforceSubdomainRequest {
-            attack_id: id as u64,
+            attack_uuid: uuid.to_string(),
             domain: req.domain.clone(),
             wordlist_path: req.wordlist_path.clone(),
             concurrent_limit: req.concurrent_limit,
@@ -140,9 +132,9 @@ pub async fn bruteforce_subdomains(
 
                             if let Err(err) = ws_manager_chan
                                 .send(WsManagerMessage::Message(
-                                    uuid,
+                                    user_uuid,
                                     WsMessage::BruteforceSubdomainsResult {
-                                        attack_id: id,
+                                        attack_uuid: uuid,
                                         source,
                                         to,
                                     },
@@ -156,9 +148,9 @@ pub async fn bruteforce_subdomains(
                             error!("Error while reading from stream: {err}");
                             if let Err(err) = ws_manager_chan
                                 .send(WsManagerMessage::Message(
-                                    uuid,
+                                    user_uuid,
                                     WsMessage::AttackFinished {
-                                        attack_id: id,
+                                        attack_uuid: uuid,
                                         finished_successful: false,
                                     },
                                 ))
@@ -175,9 +167,9 @@ pub async fn bruteforce_subdomains(
                 error!("Error while reading from stream: {err}");
                 if let Err(err) = ws_manager_chan
                     .send(WsManagerMessage::Message(
-                        uuid,
+                        user_uuid,
                         WsMessage::AttackFinished {
-                            attack_id: id,
+                            attack_uuid: uuid,
                             finished_successful: false,
                         },
                     ))
@@ -191,7 +183,7 @@ pub async fn bruteforce_subdomains(
 
         let now = Utc::now();
         if let Err(err) = update!(db.as_ref(), Attack)
-            .condition(Attack::F.id.equals(id))
+            .condition(Attack::F.uuid.equals(uuid.as_ref()))
             .set(Attack::F.finished_at, Some(now.naive_utc()))
             .exec()
             .await
@@ -201,9 +193,9 @@ pub async fn bruteforce_subdomains(
 
         if let Err(err) = ws_manager_chan
             .send(WsManagerMessage::Message(
-                uuid,
+                user_uuid,
                 WsMessage::AttackFinished {
-                    attack_id: id,
+                    attack_uuid: uuid,
                     finished_successful: true,
                 },
             ))
@@ -213,14 +205,13 @@ pub async fn bruteforce_subdomains(
         }
     });
 
-    Ok(HttpResponse::Accepted().json(AttackResponse { attack_id: id }))
+    Ok(HttpResponse::Accepted().json(UuidResponse { uuid }))
 }
 
 /// The settings to configure a tcp port scan
 #[derive(Deserialize, ToSchema)]
 pub struct ScanTcpPortsRequest {
-    #[schema(example = 1)]
-    pub(crate) leech_id: u64,
+    pub(crate) leech_uuid: Uuid,
 
     #[schema(value_type = Vec<String>, example = json!(["10.13.37.1", "10.13.37.2", "10.13.37.50"]))]
     pub(crate) targets: Vec<IpAddr>,
@@ -245,8 +236,7 @@ pub struct ScanTcpPortsRequest {
     #[schema(example = false)]
     pub(crate) skip_icmp_check: bool,
 
-    #[schema(example = 1)]
-    pub(crate) workspace_id: u32,
+    pub(crate) workspace_uuid: Uuid,
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -298,7 +288,7 @@ impl From<&PortOrRange> for rpc_attacks::PortOrRange {
     tag = "Attacks",
     context_path = "/api/v1",
     responses(
-        (status = 202, description = "Attack scheduled", body = AttackResponse),
+        (status = 202, description = "Attack scheduled", body = UuidResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse)
     ),
@@ -313,22 +303,23 @@ pub async fn scan_tcp_ports(
     rpc_clients: RpcClients,
     ws_manager_chan: Data<WsManagerChan>,
 ) -> ApiResult<HttpResponse> {
-    let uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
+    let user_uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
     let mut client = rpc_clients
         .get_ref()
         .read()
         .await
-        .get(&(req.leech_id as i64))
+        .get(&req.leech_uuid)
         .ok_or(ApiError::InvalidLeech)?
         .clone();
 
-    let id = insert!(db.as_ref(), AttackInsert)
+    let uuid = insert!(db.as_ref(), AttackInsert)
         .return_primary_key()
         .single(&AttackInsert {
+            uuid: Uuid::new_v4(),
             attack_type: AttackType::TcpPortScan,
-            started_from: ForeignModelByField::Key(uuid),
-            workspace: ForeignModelByField::Key(req.workspace_id as i64),
+            started_by: ForeignModelByField::Key(user_uuid),
+            workspace: ForeignModelByField::Key(req.workspace_uuid),
             finished_at: None,
         })
         .await?;
@@ -336,7 +327,7 @@ pub async fn scan_tcp_ports(
     // start attack
     tokio::spawn(async move {
         let req = rpc_attacks::TcpPortScanRequest {
-            attack_id: id as u64,
+            attack_uuid: uuid.to_string(),
             targets: req.targets.iter().map(|addr| (*addr).into()).collect(),
             exclude: req.exclude.iter().map(|addr| addr.to_string()).collect(),
             ports: req.ports.iter().map(From::from).collect(),
@@ -377,7 +368,8 @@ pub async fn scan_tcp_ports(
                             if let Err(err) = insert!(db.as_ref(), TcpPortScanResult)
                                 .return_nothing()
                                 .single(&TcpPortScanResultInsert {
-                                    attack: ForeignModelByField::Key(id),
+                                    uuid: Uuid::new_v4(),
+                                    attack: ForeignModelByField::Key(uuid),
                                     address: rorm::fields::Json(address),
                                     port: v.port as i32,
                                 })
@@ -388,9 +380,9 @@ pub async fn scan_tcp_ports(
 
                             if let Err(err) = ws_manager_chan
                                 .send(WsManagerMessage::Message(
-                                    uuid,
+                                    user_uuid,
                                     WsMessage::ScanTcpPortsResult {
-                                        attack_id: id,
+                                        attack_uuid: uuid,
                                         address: address.to_string(),
                                         port: v.port as u16,
                                     },
@@ -404,9 +396,9 @@ pub async fn scan_tcp_ports(
                             error!("Error while reading from stream: {err}");
                             if let Err(err) = ws_manager_chan
                                 .send(WsManagerMessage::Message(
-                                    uuid,
+                                    user_uuid,
                                     WsMessage::AttackFinished {
-                                        attack_id: id,
+                                        attack_uuid: uuid,
                                         finished_successful: false,
                                     },
                                 ))
@@ -423,9 +415,9 @@ pub async fn scan_tcp_ports(
                 error!("Error while reading from stream: {err}");
                 if let Err(err) = ws_manager_chan
                     .send(WsManagerMessage::Message(
-                        uuid,
+                        user_uuid,
                         WsMessage::AttackFinished {
-                            attack_id: id,
+                            attack_uuid: uuid,
                             finished_successful: false,
                         },
                     ))
@@ -439,7 +431,7 @@ pub async fn scan_tcp_ports(
 
         let now = Utc::now();
         if let Err(err) = update!(db.as_ref(), Attack)
-            .condition(Attack::F.id.equals(id))
+            .condition(Attack::F.uuid.equals(uuid.as_ref()))
             .set(Attack::F.finished_at, Some(now.naive_utc()))
             .exec()
             .await
@@ -449,9 +441,9 @@ pub async fn scan_tcp_ports(
 
         if let Err(err) = ws_manager_chan
             .send(WsManagerMessage::Message(
-                uuid,
+                user_uuid,
                 WsMessage::AttackFinished {
-                    attack_id: id,
+                    attack_uuid: uuid,
                     finished_successful: true,
                 },
             ))
@@ -461,14 +453,13 @@ pub async fn scan_tcp_ports(
         }
     });
 
-    Ok(HttpResponse::Accepted().json(AttackResponse { attack_id: id }))
+    Ok(HttpResponse::Accepted().json(UuidResponse { uuid: user_uuid }))
 }
 
 /// The settings to configure a certificate transparency request
 #[derive(Deserialize, ToSchema)]
 pub struct QueryCertificateTransparencyRequest {
-    #[schema(example = 1)]
-    pub(crate) leech_id: u64,
+    pub(crate) leech_uuid: Uuid,
     #[schema(example = "example.com")]
     pub(crate) target: String,
     #[schema(example = true)]
@@ -477,8 +468,7 @@ pub struct QueryCertificateTransparencyRequest {
     pub(crate) max_retries: u32,
     #[schema(example = 500)]
     pub(crate) retry_interval: u64,
-    #[schema(example = 1337)]
-    pub(crate) workspace_id: u32,
+    pub(crate) workspace_uuid: Uuid,
 }
 
 /// Query a certificate transparency log collector.
@@ -492,7 +482,7 @@ pub struct QueryCertificateTransparencyRequest {
     tag = "Attacks",
     context_path = "/api/v1",
     responses(
-        (status = 202, description = "Attack scheduled", body = AttackResponse),
+        (status = 202, description = "Attack scheduled", body = UuidResponse),
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse)
     ),
@@ -507,22 +497,23 @@ pub async fn query_certificate_transparency(
     rpc_clients: Data<RpcClients>,
     ws_manager_chan: Data<WsManagerChan>,
 ) -> ApiResult<HttpResponse> {
-    let uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
+    let user_uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
     let mut client = rpc_clients
         .get_ref()
         .read()
         .await
-        .get(&(req.leech_id as i64))
+        .get(&req.leech_uuid)
         .ok_or(ApiError::InvalidLeech)?
         .clone();
 
-    let id = insert!(db.as_ref(), AttackInsert)
+    let uuid = insert!(db.as_ref(), AttackInsert)
         .return_primary_key()
         .single(&AttackInsert {
+            uuid: Uuid::new_v4(),
             attack_type: AttackType::QueryCertificateTransparency,
-            started_from: ForeignModelByField::Key(uuid),
-            workspace: ForeignModelByField::Key(req.workspace_id as i64),
+            started_by: ForeignModelByField::Key(user_uuid),
+            workspace: ForeignModelByField::Key(req.workspace_uuid),
             finished_at: None,
         })
         .await?;
@@ -541,9 +532,9 @@ pub async fn query_certificate_transparency(
 
                 if let Err(err) = ws_manager_chan
                     .send(WsManagerMessage::Message(
-                        uuid,
+                        user_uuid,
                         WsMessage::CertificateTransparencyResult {
-                            attack_id: id,
+                            attack_uuid: uuid,
                             entries: res
                                 .entries
                                 .into_iter()
@@ -587,9 +578,9 @@ pub async fn query_certificate_transparency(
                 error!("Error while reading from stream: {err}");
                 if let Err(err) = ws_manager_chan
                     .send(WsManagerMessage::Message(
-                        uuid,
+                        user_uuid,
                         WsMessage::AttackFinished {
-                            attack_id: id,
+                            attack_uuid: uuid,
                             finished_successful: false,
                         },
                     ))
@@ -603,7 +594,7 @@ pub async fn query_certificate_transparency(
 
         let now = Utc::now();
         if let Err(err) = update!(db.as_ref(), Attack)
-            .condition(Attack::F.id.equals(id))
+            .condition(Attack::F.uuid.equals(uuid.as_ref()))
             .set(Attack::F.finished_at, Some(now.naive_utc()))
             .exec()
             .await
@@ -613,9 +604,9 @@ pub async fn query_certificate_transparency(
 
         if let Err(err) = ws_manager_chan
             .send(WsManagerMessage::Message(
-                uuid,
+                user_uuid,
                 WsMessage::AttackFinished {
-                    attack_id: id,
+                    attack_uuid: uuid,
                     finished_successful: true,
                 },
             ))
@@ -625,15 +616,14 @@ pub async fn query_certificate_transparency(
         }
     });
 
-    Ok(HttpResponse::Accepted().json(AttackResponse { attack_id: id }))
+    Ok(HttpResponse::Accepted().json(UuidResponse { uuid }))
 }
 
 /// A simple version of an attack
 #[derive(Serialize, ToSchema)]
 pub(crate) struct SimpleAttack {
-    #[schema(example = 1337)]
-    pub(crate) id: i64,
-    pub(crate) workspace_id: i64,
+    pub(crate) uuid: Uuid,
+    pub(crate) workspace_uuid: Uuid,
     pub(crate) attack_type: AttackTypeSchema,
     pub(crate) started_from: UserResponse,
     pub(crate) finished_at: Option<DateTime<Utc>>,
@@ -674,12 +664,12 @@ impl From<AttackType> for AttackTypeSchema {
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse),
     ),
-    params(PathId),
+    params(PathUuid),
     security(("api_key" = []))
 )]
-#[get("/attacks/{id}")]
+#[get("/attacks/{uuid}")]
 pub(crate) async fn get_attack(
-    req: Path<PathId>,
+    req: Path<PathUuid>,
     db: Data<Database>,
     session: Session,
 ) -> ApiResult<Json<SimpleAttack>> {
@@ -688,30 +678,39 @@ pub(crate) async fn get_attack(
     let attack = query!(
         &mut tx,
         (
-            Attack::F.id,
+            Attack::F.uuid,
             Attack::F.workspace,
             Attack::F.attack_type,
             Attack::F.finished_at,
             Attack::F.created_at,
-            Attack::F.started_from.uuid,
-            Attack::F.started_from.username,
-            Attack::F.started_from.display_name,
+            Attack::F.started_by.uuid,
+            Attack::F.started_by.username,
+            Attack::F.started_by.display_name,
         )
     )
-    .condition(Attack::F.id.equals(req.id as i64))
+    .condition(Attack::F.uuid.equals(req.uuid.as_ref()))
     .optional()
     .await?
-    .ok_or(ApiError::InvalidId)?;
+    .ok_or(ApiError::InvalidUuid)?;
 
-    let attack = if has_access(&mut tx, req.id as i64, &session).await? {
-        let (id, workspace, attack_type, finished_at, created_at, uuid, username, display_name) =
-            attack;
+    let attack = if has_access(&mut tx, req.uuid, &session).await? {
+        let (
+            uuid,
+            workspace,
+            attack_type,
+            finished_at,
+            created_at,
+            by_uuid,
+            username,
+            display_name,
+        ) = attack;
+
         Ok(SimpleAttack {
-            id,
-            workspace_id: *workspace.key(),
+            uuid,
+            workspace_uuid: *workspace.key(),
             attack_type: attack_type.into(),
             started_from: UserResponse {
-                uuid,
+                uuid: by_uuid,
                 username,
                 display_name,
             },
@@ -758,8 +757,8 @@ pub(crate) struct Page<T> {
 
 #[derive(Serialize, ToSchema)]
 pub(crate) struct SimpleTcpPortScanResult {
-    pub id: i64,
-    pub attack: i64,
+    pub uuid: Uuid,
+    pub attack: Uuid,
     pub created_at: DateTime<Utc>,
     #[schema(value_type = String)]
     pub address: IpAddr,
@@ -775,38 +774,38 @@ tag = "Attacks",
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse),
     ),
-    params(PathId, PageParams),
+    params(PathUuid, PageParams),
     security(("api_key" = []))
 )]
-#[get("/attacks/{id}/tcpPortScanResults")]
+#[get("/attacks/{uuid}/tcpPortScanResults")]
 pub(crate) async fn get_tcp_port_scan_results(
-    path: Path<PathId>,
+    path: Path<PathUuid>,
     query: Query<PageParams>,
     session: Session,
     db: Data<Database>,
 ) -> ApiResult<Json<TcpPortScanResultsPage>> {
     let mut tx = db.start_transaction().await?;
 
-    let id = path.id as i64;
+    let uuid = path.uuid;
     let PageParams { limit, offset } = query.into_inner();
 
-    let page = if !has_access(&mut tx, id, &session).await? {
+    let page = if !has_access(&mut tx, uuid, &session).await? {
         Err(ApiError::MissingPrivileges)
     } else {
-        let (total,) = query!(&mut tx, (TcpPortScanResult::F.id.count(),))
-            .condition(TcpPortScanResult::F.attack.equals(id))
+        let (total,) = query!(&mut tx, (TcpPortScanResult::F.uuid.count(),))
+            .condition(TcpPortScanResult::F.attack.equals(uuid.as_ref()))
             .one()
             .await?;
         let results = query!(&mut tx, TcpPortScanResult)
-            .condition(TcpPortScanResult::F.attack.equals(id))
-            .order_asc(TcpPortScanResult::F.id)
+            .condition(TcpPortScanResult::F.attack.equals(uuid.as_ref()))
+            .order_asc(TcpPortScanResult::F.uuid)
             .limit(limit)
             .offset(offset)
             .all()
             .await?
             .into_iter()
             .map(|result| SimpleTcpPortScanResult {
-                id: result.id,
+                uuid: result.uuid,
                 attack: *result.attack.key(),
                 created_at: Utc.from_utc_datetime(&result.created_at),
                 address: result.address.into_inner(),
@@ -835,12 +834,12 @@ pub(crate) async fn get_tcp_port_scan_results(
         (status = 400, description = "Client error", body = ApiErrorResponse),
         (status = 500, description = "Server error", body = ApiErrorResponse)
     ),
-    params(PathId),
+    params(PathUuid),
     security(("api_key" = []))
 )]
-#[delete("/attacks/{id}")]
+#[delete("/attacks/{uuid}")]
 pub(crate) async fn delete_attack(
-    req: Path<PathId>,
+    req: Path<PathUuid>,
     session: Session,
     db: Data<Database>,
 ) -> ApiResult<HttpResponse> {
@@ -849,19 +848,19 @@ pub(crate) async fn delete_attack(
     let user = query_user(&mut tx, &session).await?;
 
     let attack = query!(&mut tx, Attack)
-        .condition(Attack::F.id.equals(req.id as i64))
+        .condition(Attack::F.uuid.equals(req.uuid.as_ref()))
         .optional()
         .await?
-        .ok_or(ApiError::InvalidId)?;
+        .ok_or(ApiError::InvalidUuid)?;
 
-    if user.admin || *attack.started_from.key() == user.uuid {
-        debug!("Attack {} got deleted by {}", attack.id, user.username);
+        if user.admin || *attack.started_by.key() == user.uuid {
+            debug!("Attack {} got deleted by {}", attack.uuid, user.username);
 
         rorm::delete!(&mut tx, Attack).single(&attack).await?;
     } else {
         debug!(
             "User {} does not has the privileges to delete the attack {}",
-            user.username, attack.id
+            user.username, attack.uuid
         );
 
         return Err(ApiError::MissingPrivileges);
@@ -874,11 +873,11 @@ pub(crate) async fn delete_attack(
 
 /// Does the user have access to the attack's workspace?
 /// I.e. is owner or member?
-async fn has_access(tx: &mut Transaction, attack_id: i64, session: &Session) -> ApiResult<bool> {
+async fn has_access(tx: &mut Transaction, attack_uuid: Uuid, session: &Session) -> ApiResult<bool> {
     let uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
-    let (workspace, owner) = query!(&mut *tx, (Workspace::F.id, Workspace::F.owner))
-        .condition(Workspace::F.attacks.id.equals(attack_id))
+    let (workspace, owner) = query!(&mut *tx, (Workspace::F.uuid, Workspace::F.owner))
+        .condition(Workspace::F.attacks.uuid.equals(attack_uuid.as_ref()))
         .one()
         .await?;
     if *owner.key() == uuid {
@@ -887,7 +886,7 @@ async fn has_access(tx: &mut Transaction, attack_id: i64, session: &Session) -> 
 
     Ok(query!(&mut *tx, (WorkspaceMember::F.id,))
         .condition(and!(
-            WorkspaceMember::F.workspace.equals(workspace),
+            WorkspaceMember::F.workspace.equals(workspace.as_ref()),
             WorkspaceMember::F.member.equals(uuid.as_ref()),
         ))
         .optional()

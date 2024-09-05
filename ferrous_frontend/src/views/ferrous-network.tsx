@@ -94,7 +94,7 @@ export default class ferrousNetwork extends React.Component<FerrousNetworkProps,
                             }
                         }}
                     >
-                        <th>{l.id}</th>
+                        <th>{l.uuid}</th>
                         <th>{l.name}</th>
                         <th>{l.address}</th>
                         <th>
