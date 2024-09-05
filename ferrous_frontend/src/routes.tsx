@@ -8,6 +8,7 @@ import AdminGuard from "./components/admin-guard";
 import Attacks from "./views/attacks";
 import AttackResults from "./views/attack-results";
 import WorkspaceOverview from "./views/workspace-overview";
+import Workspace from "./views/workspace";
 
 export const ROUTER = new Router();
 
@@ -15,6 +16,11 @@ export const ROUTES = {
     HOME: ROUTER.add({ url: "", parser: {}, render: () => <Home /> }),
     ME: ROUTER.add({ url: "me", parser: {}, render: () => <Me /> }),
     WORKSPACES: ROUTER.add({ url: "workspaces", parser: {}, render: () => <WorkspaceOverview /> }),
+    WORKSPACE: ROUTER.add({
+        url: "workspaces/{id}",
+        parser: { id: Number },
+        render: ({ id }) => <Workspace id={id} />,
+    }),
     ATTACKS: ROUTER.add({ url: "attacks", parser: {}, render: () => <Attacks /> }),
 
     ATTACK_RESULTS: ROUTER.add({
