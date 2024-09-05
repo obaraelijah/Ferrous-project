@@ -38,7 +38,7 @@ toml = { version = "~0.7" }
 serde_json = { version = "~1" }
 serde_repr = { version = "~0.1" }
 # Time library
-chrono = { version = ">=0.4.20", features = ["serde"] }
+chrono = { version = "~0.4", default-features = false, features = ["serde"] }
 # Bytes abstractions for network usage
 bytes = { version = "~1" }
 # Base64 decoder and encoder
