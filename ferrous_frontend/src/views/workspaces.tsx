@@ -1,12 +1,17 @@
 import React from "react";
 import { Api } from "../api/api";
 import { check, handleApiError } from "../utils/helper";
-import { SimpleWorkspace } from "../api/generated/models";
+import { SimpleWorkspace } from "../api/generated";
 import Loading from "../components/loading";
 import Popup from "reactjs-popup";
 import Input from "../components/input";
 import Textarea from "../components/textarea";
 import { toast } from "react-toastify";
+import "../styling/workspaces.css";
+import WorkspaceIcon from "../svg/workspace";
+import Checkbox from "../components/checkbox";
+
+type Sorting = "none" | "name" | "createdAt" | "lastModified";
 
 type WorkspacesProps = {};
 type WorkspacesState = {
@@ -24,6 +29,14 @@ type WorkspacesState = {
     newName: string;
     /** New workspace's description */
     newDesc: string;
+
+    /** The search query */
+    search: string;
+
+    onlyOwner: boolean;
+    onlyMember: boolean;
+
+    sorting: Sorting;
 };
 
 /** View to expose the `/api/v1/workspaces` endpoints */
@@ -33,6 +46,10 @@ export default class Workspaces extends React.Component<WorkspacesProps, Workspa
         createNew: false,
         newDesc: "",
         newName: "",
+        search: "",
+        onlyOwner: false,
+        onlyMember: false,
+        sorting: "none",
     };
 
     componentDidMount() {
@@ -49,81 +66,6 @@ export default class Workspaces extends React.Component<WorkspacesProps, Workspa
         );
     }
 
-    render() {
-        const { workspaces } = this.state;
-        if (workspaces === undefined) return <Loading />;
-
-        return (
-            <div className="pane">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {workspaces.map((workspace) => (
-                            <tr key={workspace.id}>
-                                <td>{workspace.name}</td>
-                                <td>{workspace.description || ""}</td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="button"
-                                        onClick={() => this.setState({ confirmDelete: workspace })}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button className="button" type="button" onClick={() => this.setState({ createNew: true })}>
-                    Create new workspace
-                </button>
-                <Popup
-                    modal
-                    nested
-                    open={this.state.confirmDelete !== null}
-                    onClose={() => this.setState({ confirmDelete: null })}
-                >
-                    <div className="popup-content pane">
-                        <h1 className="heading neon">
-                            Are you sure you want to delete {this.state.confirmDelete?.name || ""}?
-                        </h1>
-                        <button className="button" type="button" onClick={() => this.deleteWorkspace()}>
-                            Delete
-                        </button>
-                        <button className="button" type="button" onClick={() => this.setState({ confirmDelete: null })}>
-                            Chancel
-                        </button>
-                    </div>
-                </Popup>
-                <Popup modal nested open={this.state.createNew} onClose={() => this.setState({ createNew: false })}>
-                    <form
-                        className="popup-content pane"
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            this.createWorkspace();
-                        }}
-                    >
-                        <h1 className="heading neon">New Workspace</h1>
-                        <label>Name:</label>
-                        <Input value={this.state.newName} onChange={(newName) => this.setState({ newName })} />
-                        <label>Description:</label>
-                        <Textarea value={this.state.newDesc} onChange={(newDesc) => this.setState({ newDesc })} />
-                        <button type="submit" className="button">
-                            Create workspace
-                        </button>
-                    </form>
-                </Popup>
-            </div>
-        );
-    }
-
     deleteWorkspace() {
         const { confirmDelete } = this.state;
         if (confirmDelete === null) return;
@@ -137,16 +79,141 @@ export default class Workspaces extends React.Component<WorkspacesProps, Workspa
         );
     }
 
-    createWorkspace() {
+    async createWorkspace() {
         const { newName, newDesc } = this.state;
         if (!check([[newName.length > 0, "Empty name"]])) return;
 
-        Api.workspaces.create({ name: newName, description: newDesc.length > 0 ? newDesc : null }).then(
-            handleApiError(() => {
+        (await Api.workspaces.create({ name: newName, description: newDesc.length > 0 ? newDesc : null })).match(
+            (_) => {
                 toast.success("Created new workspace");
                 this.setState({ newName: "", newDesc: "", createNew: false });
                 this.fetchState();
-            })
+            },
+            (err) => {
+                toast.error(err.message);
+            }
+        );
+    }
+
+    render() {
+        const { workspaces } = this.state;
+        if (workspaces === undefined) return <Loading />;
+
+        return (
+            <>
+                <div className={"workspace-outer-container"}>
+                    <div className={"workspace-creation pane"}>
+                        <WorkspaceIcon />
+                        <form
+                            className={"workspace-creation-form"}
+                            method={"post"}
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                await this.createWorkspace();
+                            }}
+                        >
+                            <h2 className={"heading"}>Create a new workspace</h2>
+                            <div className={"workspace-creation-table"}>
+                                <span>Name</span>
+                                <Input
+                                    value={this.state.newName}
+                                    onChange={(v) => {
+                                        this.setState({ newName: v });
+                                    }}
+                                />
+                                <span>Description</span>
+                                <Textarea
+                                    value={this.state.newDesc}
+                                    onChange={(v) => {
+                                        this.setState({ newDesc: v });
+                                    }}
+                                />
+                                <button className={"button"}>Create</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div className={"workspace-list-filter pane"}>
+                        <Input
+                            placeholder={"Search"}
+                            value={this.state.search}
+                            onChange={(v) => {
+                                this.setState({ search: v });
+                            }}
+                        />
+                        <div className={"workspace-filter-ownership"}>
+                            <h3 className={"heading"}>Ownership</h3>
+                            <div className={"workspace-filter-ownership-table"}>
+                                <span>Owner</span>
+                                <Checkbox
+                                    value={this.state.onlyOwner}
+                                    onChange={() => {
+                                        this.setState({ onlyOwner: !this.state.onlyOwner, onlyMember: false });
+                                    }}
+                                />
+                                <span>Member</span>
+                                <Checkbox
+                                    value={this.state.onlyMember}
+                                    onChange={() => {
+                                        this.setState({ onlyOwner: false, onlyMember: !this.state.onlyMember });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div className={"workspace-sorting"}>
+                            <h3 className={"heading"}>Sorting</h3>
+                            <div className={"workspace-sorting-table"}>
+                                <span>Name</span>
+                                <Checkbox
+                                    value={this.state.sorting === "name"}
+                                    onChange={() => {
+                                        this.setState({ sorting: this.state.sorting === "name" ? "none" : "name" });
+                                    }}
+                                />
+                                <div></div>
+                                <span>Created timestamp</span>
+                                <Checkbox
+                                    value={this.state.sorting === "createdAt"}
+                                    onChange={() => {
+                                        this.setState({
+                                            sorting: this.state.sorting === "createdAt" ? "none" : "createdAt",
+                                        });
+                                    }}
+                                />
+                                <span>Last modified</span>
+                                <Checkbox
+                                    value={this.state.sorting === "lastModified"}
+                                    onChange={() => {
+                                        this.setState({
+                                            sorting: this.state.sorting === "lastModified" ? "none" : "lastModified",
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className={"workspace-container"}>
+                        {workspaces
+                            .filter((e) => {
+                                if (this.state.search === "") return true;
+
+                                return e.name.includes(this.state.search);
+                            })
+                            .map((w) => {
+                                return (
+                                    <div className={"pane workspace"}>
+                                        <h3 className={"heading"}>{w.name}</h3>
+                                        <div className={"workspace-table"}>
+                                            <span>Owner:</span>
+                                            <span>{w.owner.displayName}</span>
+                                            <span>Description:</span>
+                                            <span>{w.description}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                </div>
+            </>
         );
     }
 }
