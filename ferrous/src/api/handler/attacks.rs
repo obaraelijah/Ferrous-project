@@ -13,8 +13,8 @@ use rorm::fields::ForeignModelByField;
 use rorm::transaction::Transaction;
 use rorm::{and, insert, query, update, Database, Model};
 use serde::{Deserialize, Serialize};
-use tokio::sync::oneshot;
 use serde::{Deserialize, Serialize};
+use tokio::sync::oneshot;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
@@ -948,8 +948,8 @@ pub(crate) async fn delete_attack(
         .await?
         .ok_or(ApiError::InvalidUuid)?;
 
-        if user.admin || *attack.started_by.key() == user.uuid {
-            debug!("Attack {} got deleted by {}", attack.uuid, user.username);
+    if user.admin || *attack.started_by.key() == user.uuid {
+        debug!("Attack {} got deleted by {}", attack.uuid, user.username);
 
         rorm::delete!(&mut tx, Attack).single(&attack).await?;
     } else {

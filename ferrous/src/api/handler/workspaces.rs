@@ -55,7 +55,7 @@ pub(crate) async fn create_workspace(
         })
         .await?;
 
-        Ok(Json(UuidResponse { uuid }))
+    Ok(Json(UuidResponse { uuid }))
 }
 
 /// Delete a workspace by its id
@@ -169,7 +169,7 @@ pub(crate) async fn get_workspace(
         .await?
         .is_some();
 
-        let is_owner = query!(&mut tx, (Workspace::F.uuid,))
+    let is_owner = query!(&mut tx, (Workspace::F.uuid,))
         .condition(and!(
             Workspace::F.uuid.equals(req.uuid.as_ref()),
             Workspace::F.owner.equals(user_uuid.as_ref())
@@ -398,7 +398,7 @@ pub(crate) async fn get_all_workspaces_admin(
 /// Get a [`FullWorkspace`] by its uuid without permission checks
 async fn get_workspace_unchecked(uuid: Uuid, tx: &mut Transaction) -> ApiResult<FullWorkspace> {
     let workspace = query!(&mut *tx, Workspace)
-    .condition(Workspace::F.uuid.equals(uuid.as_ref()))
+        .condition(Workspace::F.uuid.equals(uuid.as_ref()))
         .optional()
         .await?
         .ok_or(ApiError::InvalidUuid)?;
