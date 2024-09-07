@@ -151,8 +151,10 @@ pub(crate) async fn get_user(req: Path<PathUuid>, db: Data<Database>) -> ApiResu
         username: user.username,
         display_name: user.display_name,
         admin: user.admin,
-        created_at: DateTime::from_utc(user.created_at, Utc),
-        last_login: user.last_login.map(|dt| DateTime::from_utc(dt, Utc)),
+        created_at: DateTime::from_naive_utc_and_offset(user.created_at, Utc),
+        last_login: user
+            .last_login
+            .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
     }))
 }
 
@@ -179,8 +181,10 @@ pub(crate) async fn get_all_users(db: Data<Database>) -> ApiResult<Json<GetUserR
                 username: u.username,
                 display_name: u.display_name,
                 admin: u.admin,
-                created_at: DateTime::from_utc(u.created_at, Utc),
-                last_login: u.last_login.map(|dt| DateTime::from_utc(dt, Utc)),
+                created_at: DateTime::from_naive_utc_and_offset(u.created_at, Utc),
+                last_login: u
+                    .last_login
+                    .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
             })
             .collect(),
     }))
@@ -212,8 +216,10 @@ pub(crate) async fn get_me(session: Session, db: Data<Database>) -> ApiResult<Js
         username: user.username,
         display_name: user.display_name,
         admin: user.admin,
-        created_at: DateTime::from_utc(user.created_at, Utc),
-        last_login: user.last_login.map(|dt| DateTime::from_utc(dt, Utc)),
+        created_at: DateTime::from_naive_utc_and_offset(user.created_at, Utc),
+        last_login: user
+            .last_login
+            .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
     }))
 }
 

@@ -52,7 +52,6 @@ pub(crate) async fn create_workspace(
             name: req.name.clone(),
             description: req.description.clone(),
             owner: ForeignModelByField::Key(user_uuid),
-            deletable: true,
         })
         .await?;
 
@@ -86,12 +85,6 @@ pub(crate) async fn delete_workspace(
         .optional()
         .await?
         .ok_or(ApiError::InvalidUuid)?;
-
-    if !workspace.deletable {
-        debug!("Workspace {} is not deletable", workspace.uuid);
-
-        return Err(ApiError::WorkspaceNotDeletable);
-    }
 
     if executing_user.admin || *workspace.owner.key() == executing_user.uuid {
         debug!(
