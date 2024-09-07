@@ -60,7 +60,7 @@ export function GetLeechFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
     }
     return {
 
-        uuid': json['uuid'],
+        'uuid': json['uuid'],
         'name': json['name'],
         'address': json['address'],
     };
