@@ -1054,6 +1054,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "dehashed-rs"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3d5b0b5aa40f563957faa3949a89b16544cff8a4e99000019143a5fc75f1e72"
+dependencies = [
+ "log",
+ "reqwest",
+ "rustc_version",
+ "serde",
+ "serde_json",
+ "tokio",
+ "utoipa",
+]
+
+[[package]]
 name = "der"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1256,6 +1271,7 @@ dependencies = [
  "bytes",
  "chrono",
  "clap",
+ "dehashed-rs 0.3.2",
  "futures",
  "ipnet",
  "log",
@@ -1267,6 +1283,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_repr",
+ "thiserror",
  "tokio",
  "toml",
  "tonic",
@@ -1948,7 +1965,7 @@ dependencies = [
  "byte-unit",
  "chrono",
  "clap",
- "dehashed-rs",
+ "dehashed-rs 0.2.0",
  "env_logger",
  "futures",
  "ipnet",

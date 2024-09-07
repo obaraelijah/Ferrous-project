@@ -6,6 +6,7 @@ use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, Secur
 use utoipa::{Modify, OpenApi};
 
 use crate::api::handler;
+use crate::models;
 
 struct SecurityAddon;
 
@@ -106,6 +107,7 @@ impl Modify for SecurityAddon2 {
         handler::SimpleTcpPortScanResult,
         handler::AttackTypeSchema,
         handler::UuidResponse,
+        models::AttackType,
     )),
     modifiers(&SecurityAddon, &SecurityAddon2),
 )]
