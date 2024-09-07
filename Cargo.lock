@@ -1041,20 +1041,6 @@ checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
 name = "dehashed-rs"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "383f137c213fe1c5371d3b5e781bb9c66576644b78323e6a9f453aebb6ee3357"
-dependencies = [
- "log",
- "reqwest",
- "rustc_version",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "dehashed-rs"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3d5b0b5aa40f563957faa3949a89b16544cff8a4e99000019143a5fc75f1e72"
@@ -1271,7 +1257,7 @@ dependencies = [
  "bytes",
  "chrono",
  "clap",
- "dehashed-rs 0.3.2",
+ "dehashed-rs",
  "futures",
  "ipnet",
  "log",
@@ -1965,7 +1951,7 @@ dependencies = [
  "byte-unit",
  "chrono",
  "clap",
- "dehashed-rs 0.2.0",
+ "dehashed-rs",
  "env_logger",
  "futures",
  "ipnet",
