@@ -165,9 +165,9 @@ dependencies = [
 
 [[package]]
 name = "actix-toolbox"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f4db88fd28b70834c828b4370e05af9fd20aaa437c9750c799710a68012ec66"
+checksum = "671496831a04cc1f9c9160b5bcd43d76415dad27c310b0e9e2f5d7097104d3e0"
 dependencies = [
  "actix",
  "actix-session",
@@ -1268,6 +1268,7 @@ dependencies = [
  "dehashed-rs",
  "futures",
  "ipnet",
+ "ipnetwork",
  "log",
  "prost",
  "prost-types",
@@ -2941,7 +2942,6 @@ dependencies = [
  "rustc_version",
  "serde",
  "serde_json",
- "time",
  "uuid",
 ]
 
@@ -3015,7 +3015,6 @@ dependencies = [
  "bit-vec",
  "chrono",
  "ipnetwork",
- "libsqlite3-sys",
  "mac_address",
  "rorm-declaration",
  "rustc_version",
