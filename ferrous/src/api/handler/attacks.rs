@@ -14,7 +14,6 @@ use rorm::db::transaction::Transaction;
 use rorm::prelude::ForeignModelByField;
 use rorm::{and, insert, query, update, Database, FieldAccess, Model};
 use serde::{Deserialize, Serialize};
-use serde::{Deserialize, Serialize};
 use tokio::sync::oneshot;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
@@ -710,7 +709,7 @@ pub async fn query_dehashed(
                 address: x.address,
                 phone: x.phone,
                 vin: x.vin,
-                ip_address: x.ip_address.map(|x| IpNetwork::from(x)),
+                ip_address: x.ip_address.map(IpNetwork::from),
                 attack: ForeignModelByField::Key(attack_uuid),
             })
             .collect();

@@ -249,7 +249,7 @@ async fn main() -> Result<(), String> {
 
                         info!("Sending results to ferrous");
 
-                        let endpoint = Endpoint::from_str(&config.ferrous.ferrous_uri.to_string()).unwrap();
+                        let endpoint = Endpoint::from_str(config.ferrous.ferrous_uri.as_ref()).unwrap();
                         let chan = endpoint.connect().await.unwrap();
 
                         let mut client = AttackResultsServiceClient::new(chan);
