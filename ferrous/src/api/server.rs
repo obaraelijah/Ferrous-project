@@ -8,8 +8,8 @@ use crate::api::handler::{
     get_all_users, get_all_workspaces, get_all_workspaces_admin, get_attack, get_leech, get_me,
     get_settings, get_tcp_port_scan_results, get_user, get_workspace, get_workspace_admin, login,
     logout, oauth, query_certificate_transparency, report_workspace_results, scan_tcp_ports,
-    set_password, start_auth, start_register, test, update_leech, update_me, update_workspace,
-    websocket,
+    set_password, start_auth, start_register, test, update_leech, update_me, update_settings,
+    update_workspace, websocket,
 };
 use crate::api::middleware::{
     handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired, TokenRequired,
@@ -142,7 +142,8 @@ pub(crate) async fn start_server(
                     .service(oauth::get_oauth_app)
                     .service(oauth::update_oauth_app)
                     .service(oauth::delete_oauth_app)
-                    .service(get_settings),
+                    .service(get_settings)
+                    .service(update_settings),
             )
             .service(
                 scope("/api/v1")

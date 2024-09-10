@@ -79,7 +79,7 @@ export default class Settings extends React.Component<SettingsProps, SettingsSta
             <>
                 <div className={"settings-container"}>
                     <div className={"settings-heading pane"}>
-                        <h1 className={"heading"}>Kraken Settings</h1>
+                        <h1 className={"heading"}>Ferrous Settings</h1>
                     </div>
                     {this.state.settings !== null ? (
                         <form
