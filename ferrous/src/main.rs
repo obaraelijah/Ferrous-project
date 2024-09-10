@@ -120,7 +120,7 @@ async fn main() -> Result<(), String> {
                 chan::start_dehashed_manager(settings_manager_chan.clone()).await?;
 
             start_rpc_server(&config, db.clone())?;
-            
+
             server::start_server(
                 db,
                 &config,

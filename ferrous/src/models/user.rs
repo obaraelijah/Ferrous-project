@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use rorm::fields::types::Json;
-use rorm::prelude::*;use uuid::Uuid;
+use rorm::prelude::*;
+use uuid::Uuid;
 use webauthn_rs::prelude::Passkey;
 
 /// The definition of a user

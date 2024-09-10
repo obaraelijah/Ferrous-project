@@ -249,7 +249,8 @@ async fn main() -> Result<(), String> {
 
                         info!("Sending results to ferrous");
 
-                        let endpoint = Endpoint::from_str(config.ferrous.ferrous_uri.as_ref()).unwrap();
+                        let endpoint =
+                            Endpoint::from_str(config.ferrous.ferrous_uri.as_ref()).unwrap();
                         let chan = endpoint.connect().await.unwrap();
 
                         let mut client = AttackResultsServiceClient::new(chan);
@@ -453,14 +454,18 @@ async fn main() -> Result<(), String> {
                             Ok(x) => x,
                             Err(_) => {
                                 error!("Missing environment variable DEHASHED_EMAIL");
-                                return Err("Missing environment variable DEHASHED_EMAIL".to_string());
+                                return Err(
+                                    "Missing environment variable DEHASHED_EMAIL".to_string()
+                                );
                             }
                         };
                         let api_key = match env::var("DEHASHED_API_KEY") {
                             Ok(x) => x,
                             Err(_) => {
                                 error!("Missing environment variable DEHASHED_API_KEY");
-                                return Err("Missing environment variable DEHASHED_API_KEY".to_string());
+                                return Err(
+                                    "Missing environment variable DEHASHED_API_KEY".to_string()
+                                );
                             }
                         };
 
