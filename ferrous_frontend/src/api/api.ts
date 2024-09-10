@@ -2,13 +2,19 @@ import { login, test, registerKey, authenticate, logout } from "./auth";
 import { handleError } from "./error";
 import {
     BruteforceSubdomainsRequest,
+    CreateAppRequest,
     CreateLeechRequest,
     CreateUserRequest,
-    CreateWorkspaceRequest, OAuthApi,
+    CreateWorkspaceRequest,
+    OAuthApi,
+    OAuthApplicationApi,
     QueryCertificateTransparencyRequest,
     ScanTcpPortsRequest,
+    SettingsManagementApi,
+    UpdateAppRequest,
     UpdateLeechRequest,
     UpdateMeRequest,
+    UpdateSettingsRequest,
     UpdateWorkspaceRequest,
 } from "./generated";
 import { Configuration } from "./generated";
@@ -38,6 +44,8 @@ const leechManagement = new LeechManagementApi(configuration);
 const userManagement = new UserManagementApi(configuration);
 const workspaces = new WorkspacesApi(configuration);
 const oauth = new OAuthApi(configuration);
+const oauthApplications = new OAuthApplicationApi(configuration);
+const settingsManagement = new SettingsManagementApi(configuration);
 
 export const Api = {
     admin: {
@@ -60,6 +68,20 @@ export const Api = {
             update: (uuid: UUID, leech: UpdateLeechRequest) =>
                 handleError(leechManagement.updateLeech({ uuid, updateLeechRequest: leech })),
             delete: (uuid: UUID) => handleError(leechManagement.deleteLeech({ uuid })),
+        },
+        settings: {
+            get: () => handleError(settingsManagement.getSettings()),
+            update: (settings: UpdateSettingsRequest) =>
+                handleError(settingsManagement.updateSettings({ updateSettingsRequest: settings })),
+        },
+        oauthApplications: {
+            all: () => handleError(oauthApplications.getAllOauthApps({})),
+            get: (uuid: UUID) => handleError(oauthApplications.getOauthApp({ uuid })),
+            create: (oauthApplication: CreateAppRequest) =>
+                handleError(oauthApplications.createOauthApp({ createAppRequest: oauthApplication })),
+            update: (uuid: UUID, updateAppRequest: UpdateAppRequest) =>
+                handleError(oauthApplications.updateOauthApp({ uuid, updateAppRequest })),
+            delete: (uuid: UUID) => handleError(oauthApplications.deleteOauthApp({ uuid })),
         },
     },
     attacks: {
@@ -95,8 +117,8 @@ export const Api = {
         update: (uuid: UUID, workspace: UpdateWorkspaceRequest) =>
             handleError(workspaces.updateWorkspace({ uuid, updateWorkspaceRequest: workspace })),
         delete: (uuid: UUID) => handleError(workspaces.deleteWorkspace({ uuid })),
-        oauth: {
-            info: (uuid: UUID) => handleError(oauth.info({uuid})),
-        }
+    },
+    oauth: {
+        info: (uuid: UUID) => handleError(oauth.info({ uuid })),
     },
 };

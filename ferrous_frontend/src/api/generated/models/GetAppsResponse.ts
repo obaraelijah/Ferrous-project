@@ -12,12 +12,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import type { SimpleOauthClient } from './SimpleOauthClient';
+import type { FullOauthClient } from './FullOauthClient';
 import {
-    SimpleOauthClientFromJSON,
-    SimpleOauthClientFromJSONTyped,
-    SimpleOauthClientToJSON,
-} from './SimpleOauthClient';
+    FullOauthClientFromJSON,
+    FullOauthClientFromJSONTyped,
+    FullOauthClientToJSON,
+} from './FullOauthClient';
 
 /**
  * 
@@ -27,10 +27,10 @@ import {
 export interface GetAppsResponse {
     /**
      * 
-     * @type {Array<SimpleOauthClient>}
+     * @type {Array<FullOauthClient>}
      * @memberof GetAppsResponse
      */
-    apps: Array<SimpleOauthClient>;
+    apps: Array<FullOauthClient>;
 }
 
 /**
@@ -53,7 +53,7 @@ export function GetAppsResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
     }
     return {
 
-        'apps': ((json['apps'] as Array<any>).map(SimpleOauthClientFromJSON)),
+        'apps': ((json['apps'] as Array<any>).map(FullOauthClientFromJSON)),
     };
 }
 
@@ -66,6 +66,6 @@ export function GetAppsResponseToJSON(value?: GetAppsResponse | null): any {
     }
     return {
 
-        'apps': ((value.apps as Array<any>).map(SimpleOauthClientToJSON)),
+        'apps': ((value.apps as Array<any>).map(FullOauthClientToJSON)),
     };
 }
