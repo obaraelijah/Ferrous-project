@@ -20,6 +20,7 @@ export * from './GetUser';
 export * from './GetUserResponse';
 export * from './GetWorkspace';
 export * from './GetWorkspaceResponse';
+export * from './OpenRequestInfo';
 export * from './PageParams';
 export * from './LoginRequest';
 export * from './PortOrRange';

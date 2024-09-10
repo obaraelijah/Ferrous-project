@@ -4,6 +4,7 @@ apis/AuthenticationApi.ts
 apis/LeechManagementApi.ts
 apis/OAuthApi.ts
 apis/ReportingDataExportApi.ts
+apis/SettingsManagementApi.ts
 apis/UserAdminManagementApi.ts
 apis/UserManagementApi.ts
 apis/WebsocketApi.ts
@@ -30,6 +31,7 @@ models/GetUser.ts
 models/GetUserResponse.ts
 models/GetWorkspaceResponse.ts
 models/LoginRequest.ts
+models/OpenRequestInfo.ts
 models/PageParams.ts
 models/PortOrRange.ts
 models/QueryCertificateTransparencyRequest.ts
@@ -39,17 +41,17 @@ models/ReportingUser.ts
 models/ReportingWorkspaceResults.ts
 models/ScanTcpPortsRequest.ts
 models/SetPasswordRequest.ts
-models/SimpleAttack.ts
 models/SettingsFull.ts
-models/SimpleTcpPortScanResult.ts
+models/SimpleAttack.ts
 models/SimpleOauthClient.ts
+models/SimpleTcpPortScanResult.ts
 models/SimpleWorkspace.ts
 models/TcpPortScanResultsPage.ts
-models/UpdateLeechRequest.ts
 models/UpdateAppRequest.ts
+models/UpdateLeechRequest.ts
 models/UpdateMeRequest.ts
-models/UpdateWorkspaceRequest.ts
 models/UpdateSettingsRequest.ts
+models/UpdateWorkspaceRequest.ts
 models/UserResponse.ts
 models/UuidResponse.ts
 models/index.ts
