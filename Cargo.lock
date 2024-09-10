@@ -1267,6 +1267,7 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "serde_urlencoded",
+ "sha2",
  "thiserror",
  "tokio",
  "toml",

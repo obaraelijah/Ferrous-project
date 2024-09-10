@@ -13,7 +13,10 @@ use actix_web::web::{Data, Form, Json, Path, Query, Redirect};
 use actix_web::{get, post};
 use log::error;
 use rorm::prelude::*;
-use rorm::{query, Database};
+use chrono::Utc;
+use rorm::{insert, query, Database};
+use rand::distributions::{Alphanumeric, DistString};
+use rand::thread_rng;
 use serde::Serialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -22,7 +25,7 @@ use webauthn_rs::prelude::Url;
 pub use self::applications::*;
 use self::schemas::*;
 use crate::api::handler::{ApiError, PathUuid, SessionUser, SimpleWorkspace, UserResponse};
-use crate::models::{OauthClient, User, Workspace};
+use crate::models::{OauthClient, User, Workspace, WorkspaceAccessTokenInsert};
 
 #[derive(Debug, Default)]
 pub(crate) struct OauthManager(Mutex<OauthManagerInner>);
