@@ -39,6 +39,17 @@ pub(crate) struct AuthError {
     pub error_description: Option<&'static str>,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct PKCE {
+    /// Code challenge.
+    pub code_challenge: String,
+
+    /// Code verifier transformation method is "S256" or "plain".
+    /// It defaults to "plain" if not present in the request.
+    #[serde(default)]
+    pub code_challenge_method: CodeChallengeMethod,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum AuthErrorType {
