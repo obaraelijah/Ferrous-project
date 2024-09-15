@@ -69,6 +69,8 @@ struct OpenRequest {
 
     /// User which is being asked
     user: Uuid,
+
+    pkce: Option<PKCE>,
 }
 
 #[derive(Debug, Clone)]
@@ -371,4 +373,44 @@ fn build_redirect(
     }
 
     Ok(Redirect::to(url.to_string()))
+}
+
+#[derive(Debug, Error)]
+pub enum TokenError {
+    #[error("Missing PKCE code verifier")]
+    MissingPKCE,
+
+    #[error("Unexpected PKCE code verifier i.e. no challenge code has been given in `/auth`")]
+    UnexpectedPKCE,
+
+    #[error("PKCE challenge and verifier don't match")]
+    InvalidPKCE,
+
+    #[error("The authorization code was not found")]
+    UnknownCode,
+
+    #[error("Internal server error i.e. database error")]
+    InternalError,
+
+    #[error(
+        "The `client_id`, `client_secret` or `redirect_uri` don't match the registered client."
+    )]
+    InvalidClient,
+}
+
+impl From<rorm::Error> for TokenError {
+    fn from(_: rorm::Error) -> Self {
+        error!("Database error in `/token` endpoint");
+        Self::InternalError
+    }
+}
+
+impl ResponseError for TokenError {
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        (match self {
+            Self::InternalError => HttpResponse::InternalServerError(),
+            _ => HttpResponse::BadRequest(),
+        })
+        .body(self.to_string())
+    }
 }
