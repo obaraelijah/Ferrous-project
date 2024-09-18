@@ -11,12 +11,12 @@ use std::time::Duration;
 
 use actix_web::web::{Data, Form, Json, Path, Query, Redirect};
 use actix_web::{get, post};
-use log::error;
-use rorm::prelude::*;
 use chrono::Utc;
-use rorm::{insert, query, Database};
+use log::error;
 use rand::distributions::{Alphanumeric, DistString};
 use rand::thread_rng;
+use rorm::prelude::*;
+use rorm::{insert, query, Database};
 use serde::Serialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
