@@ -9,15 +9,19 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use actix_web::web::{Data, Form, Json, Path, Query, Redirect};
-use actix_web::{get, post};
+use actix_web::body::BoxBody;
+use actix_web::web::{Data, Form, Json, Path, Query};
+use actix_web::{get, post, HttpResponse, ResponseError};
 use chrono::Utc;
-use log::error;
-use rand::distributions::{Alphanumeric, DistString};
+use base64::prelude::*;
+use log::{debug, error};
 use rand::thread_rng;
+use rand::distributions::{Alphanumeric, DistString};
 use rorm::prelude::*;
 use rorm::{insert, query, Database};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
+use thiserror::Error;
 use utoipa::ToSchema;
 use uuid::Uuid;
 use webauthn_rs::prelude::Url;
@@ -70,7 +74,7 @@ struct OpenRequest {
     /// User which is being asked
     user: Uuid,
 
-    pkce: Option<PKCE>,
+    pkce: Option<Pkce>,
 }
 
 #[derive(Debug, Clone)]
@@ -79,6 +83,17 @@ struct Scope {
 }
 
 /// Initial endpoint an application redirects the user to
+#[utoipa::path(
+    tag = "OAuth",
+    context_path = "/api/v1/oauth",
+    responses(
+        (status = 302, description = "The user is redirected to the frontend"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    params(AuthRequest),
+    security(("api_key" = []))
+)]
 #[get("/auth")]
 pub(crate) async fn auth(
     db: Data<Database>,
@@ -144,6 +159,7 @@ pub(crate) async fn auth(
         state: request.state,
         scope: Scope { workspace },
         user: user_uuid,
+        pkce: request.pkce,
     });
 
     Ok(Redirect::to(format!("/#/oauth-request/{request_uuid}")))
@@ -226,6 +242,18 @@ pub(crate) async fn info(
 }
 
 /// Endpoint visited by user to grant a requesting application access
+#[utoipa::path(
+    tag = "OAuth",
+    context_path = "/api/v1/oauth",
+    responses(
+        (status = 302, description = "The user is redirected back to the requesting client"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    params(PathUuid),
+    security(("api_key" = []))
+)]
+
 #[get("/accept/{uuid}")]
 pub(crate) async fn accept(
     db: Data<Database>,
@@ -270,6 +298,18 @@ pub(crate) async fn accept(
 }
 
 /// Endpoint visited by user to deny a requesting application access
+#[utoipa::path(
+    tag = "OAuth",
+    context_path = "/api/v1/oauth",
+    responses(
+        (status = 302, description = "The user is redirected back to the requesting client"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    params(PathUuid),
+    security(("api_key" = []))
+)]
+
 #[get("/deny/{uuid}")]
 pub(crate) async fn deny(
     db: Data<Database>,
@@ -311,21 +351,22 @@ pub(crate) async fn token(
     db: Data<Database>,
     manager: Data<OauthManager>,
     request: Form<TokenRequest>,
-) -> Result<Json<TokenResponse>, ApiError> {
+) -> Result<Json<TokenResponse>, TokenError> {
     let TokenRequest {
         grant_type: _grant_type, // "handled" by serde
         code,
         redirect_uri,
         client_id,
         client_secret,
+        code_verifier,
     } = request.into_inner();
 
-    let accepted = {
+    let accepted: OpenRequest = {
         let inner = manager.0.lock().unwrap();
         inner
             .accepted
             .get(&code)
-            .ok_or(ApiError::InvalidUuid)?
+            .ok_or(TokenError::UnknownCode)?
             .clone()
     };
 
@@ -334,21 +375,49 @@ pub(crate) async fn token(
         .one()
         .await?;
 
-    if client_id != client.uuid {
-        todo!();
+        match (code_verifier, accepted.pkce) {
+            (None, None) => {}
+            (Some(verifier), Some(challenge)) => {
+                let computed = match challenge.code_challenge_method {
+                    CodeChallengeMethod::Plain => verifier,
+                    CodeChallengeMethod::Sha256 => {
+                        let mut hasher = Sha256::new();
+                        hasher.update(verifier.as_bytes());
+                        BASE64_URL_SAFE_NO_PAD.encode(hasher.finalize())
+                    }
+                };
+                if challenge.code_challenge != computed {
+                    debug!(
+                        "PKCE failed; computed: {computed}, should be: {challenge}",
+                        challenge = challenge.code_challenge
+                    );
+                    return Err(TokenError::InvalidPKCE);
+                }
+            }
+            (None, Some(_)) => return Err(TokenError::MissingPKCE),
+            (Some(_), None) => return Err(TokenError::UnexpectedPKCE),
     }
-    if client_secret != client.secret {
-        todo!();
-    }
-    if redirect_uri != client.redirect_uri {
-        todo!();
+    if client_id != client.uuid
+        || client_secret != client.secret
+        || redirect_uri != client.redirect_uri
+    {
+        return Err(TokenError::InvalidClient);
     }
 
-    // TODO: generate properly and store in db
-    let access_token = "Very secure".to_string();
+    let access_token = Alphanumeric.sample_string(&mut thread_rng(), 32);
     let expires_in = Duration::from_secs(60);
+    insert!(db.as_ref(), WorkspaceAccessTokenInsert)
+        .single(&WorkspaceAccessTokenInsert {
+            token: access_token.clone(),
+            user: ForeignModelByField::Key(accepted.user),
+            workspace: ForeignModelByField::Key(accepted.scope.workspace),
+            expires_at: Utc::now() + expires_in,
+        })
+        .await?;
+
 
     Ok(Json(TokenResponse {
+        token_type: TokenType::AccessToken,
         access_token,
         expires_in,
     }))
