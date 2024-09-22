@@ -10,13 +10,13 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use actix_web::body::BoxBody;
-use actix_web::web::{Data, Form, Json, Path, Query};
+use actix_web::web::{Data, Form, Json, Path, Query, Redirect};
 use actix_web::{get, post, HttpResponse, ResponseError};
-use chrono::Utc;
 use base64::prelude::*;
+use chrono::Utc;
 use log::{debug, error};
-use rand::thread_rng;
 use rand::distributions::{Alphanumeric, DistString};
+use rand::thread_rng;
 use rorm::prelude::*;
 use rorm::{insert, query, Database};
 use serde::Serialize;
@@ -83,6 +83,17 @@ struct Scope {
 }
 
 /// Initial endpoint an application redirects the user to
+#[utoipa::path(
+tag = "OAuth",
+context_path = "/api/v1/oauth",
+responses(
+    (status = 302, description = "The user is redirected to the frontend"),
+    (status = 400, description = "Client error", body = ApiErrorResponse),
+    (status = 500, description = "Server error", body = ApiErrorResponse),
+),
+params(AuthRequest),
+security(("api_key" = []))
+)]
 #[utoipa::path(
     tag = "OAuth",
     context_path = "/api/v1/oauth",
@@ -253,6 +264,17 @@ pub(crate) async fn info(
     params(PathUuid),
     security(("api_key" = []))
 )]
+#[utoipa::path(
+    tag = "OAuth",
+    context_path = "/api/v1/oauth",
+    responses(
+        (status = 302, description = "The user is redirected back to the requesting client"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    params(PathUuid),
+    security(("api_key" = []))
+)]
 
 #[get("/accept/{uuid}")]
 pub(crate) async fn accept(
@@ -298,6 +320,17 @@ pub(crate) async fn accept(
 }
 
 /// Endpoint visited by user to deny a requesting application access
+#[utoipa::path(
+    tag = "OAuth",
+    context_path = "/api/v1/oauth",
+    responses(
+        (status = 302, description = "The user is redirected back to the requesting client"),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    params(PathUuid),
+    security(("api_key" = []))
+)]
 #[utoipa::path(
     tag = "OAuth",
     context_path = "/api/v1/oauth",
@@ -414,7 +447,6 @@ pub(crate) async fn token(
             expires_at: Utc::now() + expires_in,
         })
         .await?;
-
 
     Ok(Json(TokenResponse {
         token_type: TokenType::AccessToken,
