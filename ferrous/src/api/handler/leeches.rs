@@ -1,15 +1,13 @@
-use actix_web::http::Uri;
+use actix_web::web::{Data, Json, Path};
 use actix_web::{delete, get, post, put, HttpResponse};
 use log::error;
 use rorm::{insert, query, update, Database, FieldAccess, Model};
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::api::handler::users::PathUuid;
 use crate::api::handler::{ApiError, ApiResult, UuidResponse};
-use crate::api::middleware::AdminRequired;
 use crate::chan::{RpcManagerChannel, RpcManagerEvent};
 use crate::models::{Leech, LeechInsert};
 use crate::modules::uri::check_leech_address;
@@ -54,7 +52,6 @@ pub(crate) async fn create_leech(
     }
 
     if query!(&mut tx, Leech)
-        .transaction(&mut tx)
         .condition(Leech::F.address.equals(&req.address))
         .optional()
         .await?
@@ -269,6 +266,7 @@ pub(crate) async fn update_leech(
         .set_if(Leech::F.description, req.description)
         .finish_dyn_set()
         .map_err(|_| ApiError::EmptyJson)?
+        .condition(Leech::F.uuid.equals(path.uuid))
         .exec()
         .await?;
 
