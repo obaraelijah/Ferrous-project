@@ -312,7 +312,6 @@ pub(crate) async fn info(
     params(PathUuid),
     security(("api_key" = []))
 )]
-
 #[get("/accept/{uuid}")]
 pub(crate) async fn accept(
     db: Data<Database>,
@@ -379,7 +378,6 @@ pub(crate) async fn accept(
     params(PathUuid),
     security(("api_key" = []))
 )]
-
 #[get("/deny/{uuid}")]
 pub(crate) async fn deny(
     db: Data<Database>,
@@ -456,7 +454,7 @@ pub(crate) async fn token(
         .one()
         .await?;
 
-        let verifier = code_verifier.ok_or(TokenError::MissingPKCE)?;
+    let verifier = code_verifier.ok_or(TokenError::MissingPKCE)?;
     let mut hasher = Sha256::new();
     hasher.update(verifier.as_bytes());
     let computed = BASE64_URL_SAFE_NO_PAD.encode(hasher.finalize());
@@ -481,6 +479,7 @@ pub(crate) async fn token(
             token: access_token.clone(),
             user: ForeignModelByField::Key(accepted.user),
             workspace: ForeignModelByField::Key(accepted.scope.workspace),
+            application: ForeignModelByField::Key(client.uuid),
             expires_at: Utc::now() + expires_in,
         })
         .await?;
