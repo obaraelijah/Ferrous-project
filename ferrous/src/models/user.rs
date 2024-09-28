@@ -23,7 +23,7 @@ pub struct User {
     #[rorm(max_length = 1024)]
     pub password_hash: String,
 
-    /// Flag whether the user has administrative privileges
+    /// Flag whether the user is has administrative privileges
     pub admin: bool,
 
     /// Last time the user has logged in
@@ -34,7 +34,6 @@ pub struct User {
     pub created_at: DateTime<Utc>,
 
     /// Backreference to the security keys of a user
-    #[rorm(field = "UserKey::F.user")]
     pub user_keys: BackRef<field!(UserKey::F.user)>,
 }
 
@@ -79,12 +78,15 @@ pub struct LeechApiKey {
     /// Uuid of the key
     #[rorm(primary_key)]
     pub uuid: Uuid,
+
     /// Owner of the api key
     #[rorm(on_delete = "Cascade", on_update = "Cascade")]
     pub user: ForeignModel<User>,
+
     /// The api key
-    #[rorm(max_length = 255)]
+    #[rorm(max_length = 255, unique)]
     pub key: String,
+
     /// A descriptive name helping the user to identify the key
     #[rorm(max_length = 255)]
     pub name: String,
