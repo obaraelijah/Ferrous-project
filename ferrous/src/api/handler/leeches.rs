@@ -21,7 +21,6 @@ pub(crate) struct CreateLeechRequest {
     #[schema(example = "The first leech in a private net")]
     pub(crate) description: Option<String>,
 }
-
 /// Create a leech
 ///
 /// The `name` parameter must be unique.
