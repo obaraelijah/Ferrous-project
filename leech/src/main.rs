@@ -14,6 +14,7 @@
 )]
 
 use std::env;
+use std::io::Write;
 use std::net::IpAddr;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
@@ -46,6 +47,7 @@ use crate::rpc::rpc_attacks::attack_results_service_client::AttackResultsService
 use crate::rpc::rpc_attacks::shared::CertEntry;
 use crate::rpc::rpc_attacks::{CertificateTransparencyResult, MetaAttackInfo};
 use crate::rpc::start_rpc_server;
+use crate::utils::input;
 
 pub mod config;
 pub mod logging;
@@ -169,6 +171,10 @@ pub enum Command {
         #[clap(long)]
         push: Option<Uuid>,
 
+        /// Api key to authenticate when pushing
+        #[clap(long)]
+        apikey: Option<String>,
+
         /// the subcommand to execute
         #[clap(subcommand)]
         command: RunCommand,
@@ -187,6 +193,7 @@ pub struct Cli {
     #[clap(long = "config-path")]
     #[clap(default_value_t = String::from("/etc/leech/config.toml"))]
     config_path: String,
+
     /// Subcommands
     #[clap(subcommand)]
     commands: Command,
@@ -208,6 +215,7 @@ async fn main() -> Result<(), String> {
             command,
             verbosity,
             push,
+            apikey,
         } => {
             if env::var("RUST_LOG").is_err() {
                 match verbosity {
@@ -222,6 +230,17 @@ async fn main() -> Result<(), String> {
                 let config = get_config(&cli.config_path).map_err(|e| {
                     format!("Couldn't retrieve necessary config for pushing to ferrous: {e}")
                 })?;
+
+                let api_key = if let Some(apikey) = apikey {
+                    apikey
+                } else {
+                    print!("Please enter your api key: ");
+                    std::io::stdout().flush().unwrap();
+                    input()
+                        .await
+                        .map_err(|err| err.to_string())?
+                        .ok_or_else(|| "Can't push to ferrous without api key".to_string())?
+                };
 
                 match command {
                     RunCommand::CertificateTransparency {
@@ -243,6 +262,7 @@ async fn main() -> Result<(), String> {
                             .iter()
                             .flat_map(|e| {
                                 let mut name_value = e.name_value.clone();
+
                                 name_value.push(e.common_name.clone());
                                 name_value
                             })
@@ -296,6 +316,7 @@ async fn main() -> Result<(), String> {
                                     .collect(),
                                 attack_info: Some(MetaAttackInfo {
                                     workspace_uuid: workspace.to_string(),
+                                    api_key,
                                 }),
                             })
                             .await
@@ -406,11 +427,13 @@ async fn main() -> Result<(), String> {
                             .collect();
 
                         let mut port_range = vec![];
+
                         if ports.is_empty() {
                             port_range.extend(1..=u16::MAX);
                         } else {
                             utils::parse_ports(&ports, &mut port_range)?;
                         }
+
                         match technique {
                             PortScanTechnique::TcpCon => {
                                 let settings = TcpPortScannerSettings {
@@ -502,6 +525,7 @@ async fn main() -> Result<(), String> {
 
     Ok(())
 }
+
 async fn migrate(config_path: &str, migration_dir: String) -> Result<(), String> {
     let config = get_config(config_path)?;
     cli::migrate::run_migrate_custom(

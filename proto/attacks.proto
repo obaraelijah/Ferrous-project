@@ -108,6 +108,8 @@ message CertificateTransparencyResponse {
   repeated shared.CertEntry entries = 1;
 }
 
+// Implemented by leech; allows ferrous to request attack from a leech
+
 service ReqAttackService {
   rpc BruteforceSubdomains(BruteforceSubdomainRequest) returns (stream BruteforceSubdomainResponse);
   rpc RunTcpPortScan(TcpPortScanRequest) returns (stream TcpPortScanResponse);
@@ -128,6 +130,9 @@ message ResultResponse {
 message MetaAttackInfo {
   // The uuid of a workspace
   string workspace_uuid = 1;
+
+  // The user's api key
+  string api_key = 2;
 }
 
 // Result of a certificate transparency request
@@ -146,6 +151,7 @@ message SubdomainEnumerationResult {
   shared.DNSRecord record = 2;
 }
 
+// Implemented by ferrous; allows leeches to push manual scan results via cli
 service AttackResultsService {
   rpc CertificateTransparency(CertificateTransparencyResult) returns (ResultResponse);
   rpc SubdomainEnumeration(stream SubdomainEnumerationResult) returns (ResultResponse);
