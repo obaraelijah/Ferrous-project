@@ -8,7 +8,7 @@ import AdminGuard from "./components/admin-guard";
 import Attacks from "./views/attacks";
 import AttackResults from "./views/attack-results";
 import WorkspaceOverview from "./views/workspace-overview";
-import Workspace from "./views/workspace/workspace";
+import Workspace from "./views/workspace/workspace-hosts";
 import OauthRequest from "./views/oauth-request";
 import Menu from "./views/menu";
 import Settings from "./views/settings";
