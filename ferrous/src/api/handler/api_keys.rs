@@ -31,7 +31,7 @@ pub struct CreateApiKeyRequest {
     request_body = CreateApiKeyRequest,
     security(("api_key" = []))
 )]
-#[post("/api-keys")]
+#[post("/apiKeys")]
 pub async fn create_api_key(
     req: Json<CreateApiKeyRequest>,
     db: Data<Database>,
@@ -62,7 +62,7 @@ pub async fn create_api_key(
     params(PathUuid),
     security(("api_key" = []))
 )]
-#[delete("/api-keys/{uuid}")]
+#[delete("/apiKeys/{uuid}")]
 pub async fn delete_api_key(
     path: Path<PathUuid>,
     db: Data<Database>,
@@ -74,6 +74,7 @@ pub async fn delete_api_key(
             LeechApiKey::F.user.equals(user)
         ))
         .await?;
+
     if deleted == 0 {
         Err(ApiError::InvalidUuid)
     } else {
@@ -85,9 +86,11 @@ pub async fn delete_api_key(
 pub struct SimpleApiKey {
     /// The key's identifier
     pub uuid: Uuid,
+
     /// A descriptive name helping the user to identify the key
     #[schema(example = "Leech on my local machine")]
     pub name: String,
+
     /// The actual key's value
     #[schema(example = "fsn83r0jfis84nfthw...")]
     pub key: String,
@@ -109,7 +112,7 @@ pub struct GetApiKeysResponse {
     ),
     security(("api_key" = []))
 )]
-#[get("/api-keys")]
+#[get("/apiKeys")]
 pub async fn get_api_keys(
     db: Data<Database>,
     SessionUser(user): SessionUser,
@@ -132,6 +135,7 @@ pub struct UpdateApiKeyRequest {
     #[schema(example = "Leech on my local machine")]
     name: Option<String>,
 }
+
 /// Update an api key by its id
 ///
 /// All parameter are optional, but at least one of them must be specified.
@@ -147,7 +151,7 @@ pub struct UpdateApiKeyRequest {
     request_body = UpdateApiKeyRequest,
     security(("api_key" = []))
 )]
-#[put("/api-keys/{uuid}")]
+#[put("/apiKeys/{uuid}")]
 pub async fn update_leech(
     path: Path<PathUuid>,
     req: Json<UpdateApiKeyRequest>,
@@ -166,6 +170,7 @@ pub async fn update_leech(
         ))
         .exec()
         .await?;
+
     if updated == 0 {
         Err(ApiError::InvalidUuid)
     } else {

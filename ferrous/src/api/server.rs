@@ -2,21 +2,6 @@ use std::fmt::{Display, Formatter};
 use std::io;
 use std::sync::{Arc, RwLock};
 
-use crate::api::handler::{
-    apikeys, bruteforce_subdomains, create_leech, create_user, create_workspace, delete_attack,
-    delete_leech, delete_user, delete_workspace, finish_auth, finish_register, get_all_leeches,
-    get_all_users, get_all_workspaces, get_all_workspaces_admin, get_attack, get_leech, get_me,
-    get_settings, get_tcp_port_scan_results, get_user, get_workspace, get_workspace_admin, login,
-    logout, oauth, query_certificate_transparency, report_workspace_results, scan_tcp_ports,
-    set_password, start_auth, start_register, test, update_leech, update_me, update_settings,
-    update_workspace, websocket,
-};
-use crate::api::middleware::{
-    handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired, TokenRequired,
-};
-use crate::api::swagger::ApiDoc;
-use crate::chan::{RpcClients, RpcManagerChannel, SettingsManagerChan, WsManagerChan};
-use crate::config::Config;
 use actix_toolbox::tb_middleware::{
     setup_logging_mw, DBSessionStore, LoggingMiddlewareConfig, PersistentSession, SessionMiddleware,
 };
@@ -34,6 +19,22 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use webauthn_rs::prelude::{Url, WebauthnError};
 use webauthn_rs::WebauthnBuilder;
+
+use crate::api::handler::{
+    api_keys, bruteforce_subdomains, create_leech, create_user, create_workspace, delete_attack,
+    delete_leech, delete_user, delete_workspace, finish_auth, finish_register, get_all_leeches,
+    get_all_users, get_all_workspaces, get_all_workspaces_admin, get_attack, get_leech, get_me,
+    get_settings, get_tcp_port_scan_results, get_user, get_workspace, get_workspace_admin, login,
+    logout, oauth, query_certificate_transparency, report_workspace_results, scan_tcp_ports,
+    set_password, start_auth, start_register, test, update_leech, update_me, update_settings,
+    update_workspace, websocket,
+};
+use crate::api::middleware::{
+    handle_not_found, json_extractor_error, AdminRequired, AuthenticationRequired, TokenRequired,
+};
+use crate::api::swagger::ApiDoc;
+use crate::chan::{RpcClients, RpcManagerChannel, SettingsManagerChan, WsManagerChan};
+use crate::config::Config;
 
 const ORIGIN_NAME: &str = "ferrous";
 
@@ -163,10 +164,10 @@ pub(crate) async fn start_server(
                     .service(delete_attack)
                     .service(get_tcp_port_scan_results)
                     .service(get_attack)
-                    .service(apikeys::create_api_key)
-                    .service(apikeys::get_api_keys)
-                    .service(apikeys::update_leech)
-                    .service(apikeys::delete_api_key),
+                    .service(api_keys::create_api_key)
+                    .service(api_keys::get_api_keys)
+                    .service(api_keys::update_leech)
+                    .service(api_keys::delete_api_key),
             )
     })
     .bind((
@@ -181,7 +182,7 @@ pub(crate) async fn start_server(
 
 #[derive(Debug)]
 pub(crate) enum StartServerError {
-    IO(std::io::Error),
+    IO(io::Error),
     Webauthn(WebauthnError),
     InvalidSecretKey,
     InvalidOrigin,
