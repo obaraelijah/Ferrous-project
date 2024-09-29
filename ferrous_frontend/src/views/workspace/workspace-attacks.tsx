@@ -2,7 +2,6 @@ import React from "react";
 import { Api, UUID } from "../../api/api";
 import WorkspaceMenu from "./components/workspace-menu";
 import "../../styling/workspace-attacks.css";
-import WorkspaceHeading from "./components/workspace-heading";
 import { FullWorkspace } from "../../api/generated";
 import { toast } from "react-toastify";
 
@@ -30,15 +29,6 @@ export default class WorkspaceAttacks extends React.Component<WorkspaceAttacksPr
     }
 
     render() {
-        return (
-            <div className={"workspace-attacks-container"}>
-                <WorkspaceHeading
-                    additionalClassName={"workspace-attacks-heading"}
-                    uuid={this.props.uuid}
-                    name={this.state.workspace !== null ? this.state.workspace?.name : ""}
-                />
-                <WorkspaceMenu additionalClassName={"workspace-attacks-menu-ct"} uuid={this.props.uuid} />
-            </div>
-        );
+        return <div className={"workspace-attacks-container"}></div>;
     }
 }

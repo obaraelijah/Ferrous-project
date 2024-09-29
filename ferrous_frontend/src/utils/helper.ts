@@ -96,20 +96,31 @@ export async function copyToClipboard(text: string | null) {
     }
 }
 
-export function getOsIcon(os: OsType) {
-    return os === "Unknown" ? (
-        <AnonymousIcon />
-    ) : os === "Linux" ? (
-        <TuxIcon />
-    ) : os === "Apple" ? (
-        <AppleIcon />
-    ) : os === "Windows" ? (
-        <WindowsIcon />
-    ) : os === "FreeBSD" ? (
-        <FreeBSDIcon />
-    ) : os === "Android" ? (
-        <AndroidIcon />
-    ) : (
-        <AnonymousIcon />
-    );
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
+export function getOsIcon(os: OsType): React.ReactElement {
+    let IconComponent: IconComponent;
+
+    switch (os) {
+        case "Linux":
+            IconComponent = TuxIcon;
+            break;
+        case "Apple":
+            IconComponent = AppleIcon;
+            break;
+        case "Windows":
+            IconComponent = WindowsIcon;
+            break;
+        case "FreeBSD":
+            IconComponent = FreeBSDIcon;
+            break;
+        case "Android":
+            IconComponent = AndroidIcon;
+            break;
+        case "Unknown":
+        default:
+            IconComponent = AnonymousIcon;
+    }
+
+    return React.createElement(IconComponent);
 }
