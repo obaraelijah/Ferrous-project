@@ -1,6 +1,6 @@
 import React from "react";
 import { FullWorkspace, OsType, SimpleHost } from "../../api/generated";
-import "../../styling/workspace-hosts.css";
+import "../../styling/workspace-host.css";
 import Input from "../../components/input";
 import { Api } from "../../api/api";
 import { toast } from "react-toastify";
