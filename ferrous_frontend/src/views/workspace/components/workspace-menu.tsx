@@ -1,10 +1,10 @@
 import React from "react";
-import SearchIcon from "../../svg/search";
-import AttackIcon from "../../svg/attack";
-import DataIcon from "../../svg/data";
-import SettingsIcon from "../../svg/settings";
-import { ROUTES } from "../../routes";
-import "../../styling/workspace-menu.css";
+import SearchIcon from "../../../svg/search";
+import AttackIcon from "../../../svg/attack";
+import DataIcon from "../../../svg/data";
+import SettingsIcon from "../../../svg/settings";
+import { ROUTES } from "../../../routes";
+import "../../../styling/workspace-menu.css";
 
 type WorkspaceMenuItem = "search" | "attacks" | "data" | "workspace_settings";
 
