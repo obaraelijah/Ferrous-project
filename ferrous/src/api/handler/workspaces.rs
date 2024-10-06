@@ -4,6 +4,7 @@ use actix_web::{delete, get, post, put, HttpResponse};
 use chrono::{DateTime, Utc};
 use log::debug;
 use rorm::db::transaction::Transaction;
+use rorm::db::Executor;
 use rorm::fields::types::ForeignModelByField;
 use rorm::{and, insert, query, update, Database, FieldAccess, Model};
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,6 @@ use crate::api::handler::{
     de_optional, query_user, ApiError, ApiResult, PathUuid, SimpleAttack, UserResponse,
     UuidResponse,
 };
-use crate::api::middleware::{AdminRequired, AuthenticationRequired};
 use crate::models::{Attack, User, Workspace, WorkspaceInsert, WorkspaceMember};
 
 #[derive(Deserialize, ToSchema)]
@@ -120,6 +120,7 @@ pub(crate) struct SimpleWorkspace {
 }
 
 /// A full version of a workspace
+#[derive(Serialize, ToSchema)]
 pub(crate) struct FullWorkspace {
     pub(crate) uuid: Uuid,
     #[schema(example = "ultra-secure-workspace")]
@@ -159,26 +160,7 @@ pub(crate) async fn get_workspace(
 
     let mut tx = db.start_transaction().await?;
 
-    let is_member = query!(&mut tx, (WorkspaceMember::F.id,))
-        .transaction(&mut tx)
-        .condition(and!(
-            WorkspaceMember::F.member.equals(user_uuid),
-            WorkspaceMember::F.workspace.equals(req.uuid)
-        ))
-        .optional()
-        .await?
-        .is_some();
-
-    let is_owner = query!(&mut tx, (Workspace::F.uuid,))
-        .condition(and!(
-            Workspace::F.uuid.equals(req.uuid),
-            Workspace::F.owner.equals(user_uuid)
-        ))
-        .optional()
-        .await?
-        .is_some();
-
-    let workspace = if is_owner || is_member {
+    let workspace = if is_user_member_or_owner(&mut tx, user_uuid, req.uuid).await? {
         get_workspace_unchecked(req.uuid, &mut tx).await
     } else {
         Err(ApiError::MissingPrivileges)
@@ -340,14 +322,14 @@ pub(crate) async fn get_workspace_admin(
 
 /// Retrieve all workspaces
 #[utoipa::path(
-        tag = "Admin Workspaces",
-        context_path = "/api/v1/admin",
-        responses(
-            (status = 200, description = "Returns all workspaces", body = GetWorkspaceResponse),
-            (status = 400, description = "Client error", body = ApiErrorResponse),
-            (status = 500, description = "Server error", body = ApiErrorResponse),
-        ),
-        security(("api_key" = []))
+    tag = "Admin Workspaces",
+    context_path = "/api/v1/admin",
+    responses(
+        (status = 200, description = "Returns all workspaces", body = GetWorkspaceResponse),
+        (status = 400, description = "Client error", body = ApiErrorResponse),
+        (status = 500, description = "Server error", body = ApiErrorResponse),
+    ),
+    security(("api_key" = []))
 )]
 #[get("/workspaces")]
 pub(crate) async fn get_all_workspaces_admin(
@@ -367,7 +349,6 @@ pub(crate) async fn get_all_workspaces_admin(
             Workspace::F.owner.display_name
         )
     )
-    .transaction(&mut tx)
     .all()
     .await?;
 
@@ -472,6 +453,37 @@ async fn get_workspace_unchecked(uuid: Uuid, tx: &mut Transaction) -> ApiResult<
         },
         attacks,
         members,
-        created_at: workspace.created_at.and_utc(),
+        created_at: workspace.created_at,
     })
+}
+
+/// Check whether a user is privileged to access a workspace
+pub async fn is_user_member_or_owner(
+    tx: impl Executor<'_>,
+    user_uuid: Uuid,
+    workspace_uuid: Uuid,
+) -> ApiResult<bool> {
+    let mut tx = tx.ensure_transaction().await?;
+
+    let is_member = query!(tx.get_transaction(), (WorkspaceMember::F.id,))
+        .condition(and!(
+            WorkspaceMember::F.member.equals(user_uuid),
+            WorkspaceMember::F.workspace.equals(workspace_uuid)
+        ))
+        .optional()
+        .await?
+        .is_some();
+
+    let is_owner = query!(tx.get_transaction(), (Workspace::F.uuid,))
+        .condition(and!(
+            Workspace::F.uuid.equals(workspace_uuid),
+            Workspace::F.owner.equals(user_uuid)
+        ))
+        .optional()
+        .await?
+        .is_some();
+
+    tx.commit().await?;
+
+    Ok(is_member || is_owner)
 }
