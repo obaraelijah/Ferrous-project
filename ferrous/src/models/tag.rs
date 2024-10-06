@@ -11,9 +11,11 @@ pub struct GlobalTag {
     /// The primary key of a global tag
     #[rorm(primary_key)]
     pub uuid: Uuid,
+
     /// Name of the global tag
     #[rorm(max_length = 255, unique)]
     pub name: String,
+
     /// The color of the tag, converted from hex
     pub color: i32,
 }
@@ -21,6 +23,31 @@ pub struct GlobalTag {
 #[derive(Patch)]
 #[rorm(model = "GlobalTag")]
 pub(crate) struct GlobalTagInsert {
+    pub(crate) uuid: Uuid,
+    pub(crate) name: String,
+    pub(crate) color: i32,
+}
+
+/// A tag that can be applied to any aggregated data.
+///
+/// It is only valid in a specific workspace
+#[derive(Model, Debug)]
+pub struct WorkspaceTag {
+    /// The primary key of a workspace tag
+    #[rorm(primary_key)]
+    pub uuid: Uuid,
+
+    /// Name of the workspace tag
+    #[rorm(max_length = 255, unique)]
+    pub name: String,
+
+    /// The color of the tag, converted from hex
+    pub color: i32,
+}
+
+#[derive(Patch)]
+#[rorm(model = "WorkspaceTag")]
+pub(crate) struct WorkspaceTagInsert {
     pub(crate) uuid: Uuid,
     pub(crate) name: String,
     pub(crate) color: i32,

@@ -156,6 +156,7 @@ impl Modify for SecurityAddon2 {
         global_tags::FullGlobalTag,
         global_tags::GetGlobalTagsResponse,
         global_tags::UpdateGlobalTag,
+        models::PortProtocol,
     )),
     modifiers(&SecurityAddon, &SecurityAddon2),
 )]
