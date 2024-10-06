@@ -6,7 +6,8 @@ use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, Secur
 use utoipa::{Modify, OpenApi};
 
 use crate::api::handler;
-use crate::api::handler::{api_keys, global_tags, hosts, oauth};use crate::models;
+use crate::api::handler::{api_keys, global_tags, hosts, oauth};
+use crate::models;
 
 struct SecurityAddon;
 
@@ -67,7 +68,6 @@ impl Modify for SecurityAddon2 {
         handler::bruteforce_subdomains,
         handler::scan_tcp_ports,
         handler::query_certificate_transparency,
-        handler::report_workspace_results,
         handler::delete_attack,
         handler::get_attack,
         handler::get_tcp_port_scan_results,
@@ -119,10 +119,6 @@ impl Modify for SecurityAddon2 {
         handler::BruteforceSubdomainsRequest,
         handler::ScanTcpPortsRequest,
         handler::QueryCertificateTransparencyRequest,
-        handler::ReportingWorkspaceResults,
-        handler::ReportingTcpPortScanAttack,
-        handler::ReportingUser,
-        handler::ReportingIpPort,
         handler::PortOrRange,
         handler::PageParams,
         handler::TcpPortScanResultsPage,
