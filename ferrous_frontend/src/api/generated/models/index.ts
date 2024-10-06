@@ -28,7 +28,6 @@ export * from './GetLeech';
 export * from './GetLeechResponse';
 export * from './GetUser';
 export * from './GetUserResponse';
-export * from './GetWorkspaceResponse';
 export * from './GetWorkspaceTagsResponse';
 export * from './GrantType';
 export * from './LoginRequest';
