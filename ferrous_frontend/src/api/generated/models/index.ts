@@ -65,6 +65,7 @@ export * from './UpdateApiKeyRequest';
 export * from './UpdateAppRequest';
 export * from './UpdateGlobalTag';
 export * from './UpdateLeechRequest';
+export * from './UpdateHostRequest';
 export * from './UpdateMeRequest';
 export * from './UpdateSettingsRequest';
 export * from './UpdateWorkspaceRequest';
