@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 #[derive(Debug)]
 pub struct Service {
     pub name: String,
@@ -72,6 +74,33 @@ pub enum ParseError {
 }
 
 fn parse_file(file: &str) -> Result<Service, ParseError> {
+    let mut lines = file
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| !(line.is_empty() || line.trim_start().starts_with('#')))
+        .map(|(index, line)| (index + 1, line));
+
+    let name = lines
+        .next()
+        .ok_or(ParseError::MissingService)?
+        .1
+        .strip_prefix("service: ")
+        .ok_or(ParseError::MissingService)?
+        .to_string();
+
+    let snd = lines.next().ok_or(ParseError::MissingPrevalence)?;
+    let prevalence: Prevalence = snd
+        .1
+        .strip_prefix("prevalence: ")
+        .ok_or(ParseError::MissingPrevalence)?
+        .parse()
+        .map_err(|_| ParseError::InvalidPrevalence(snd.0))?;
+
+
+    lines.next().ok_or(ParseError::MissingProbes)?;
+    
+    let mut probes = Vec::new();
+
     Ok(Service { 
         name, 
         prevalence, 
