@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
     ferrous.vm.provision :ansible do |a|
         a.playbook = "vagrant/ferrous.yml"
       end
-  end
+    end
   
     config.vm.define "leech" do |leech|
       leech.vm.hostname = "leech"
