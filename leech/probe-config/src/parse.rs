@@ -1,5 +1,3 @@
-use std::fmt::Error;
-
 #[derive(Debug)]
 pub struct Service {
     pub name: String,
@@ -8,7 +6,7 @@ pub struct Service {
 }
 
 impl Service {
-    pub fn from_file(file: &str) -> Result<Self, Error> {
+    pub fn from_file(file: &str) -> Result<Self, ParseError> {
         parse_file(file)
     }
 }
@@ -41,6 +39,19 @@ pub enum Prevalence {
     Obscure,
 }
 
-fn parse_file(file: &str) -> Result<(), Error> {
-    Ok(())
+#[derive(Debug)]
+pub enum ParseError {
+    MissingService,
+    MissingPrevalence,
+    MissingProbes,
+    InvalidProtocol(usize),
+    InvalidPrevalence(usize),
+}
+
+fn parse_file(file: &str) -> Result<Service, ParseError> {
+    Ok(Service { 
+        name, 
+        prevalence, 
+        probes
+    })
 }
