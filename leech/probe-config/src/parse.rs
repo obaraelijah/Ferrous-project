@@ -20,12 +20,14 @@ pub struct Probe {
     pub regex: String,
     pub sub_regex: Option<Vec<String>>,
 }
+
 #[derive(Debug)]
 pub enum Payload {
     Empty,
     String(String),
     Base64(String),
 }
+
 #[derive(Debug, Copy, Clone)]
 pub enum Protocol {
     Tcp,
