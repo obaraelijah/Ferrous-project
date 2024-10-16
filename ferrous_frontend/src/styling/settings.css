@@ -4,12 +4,15 @@
     flex-direction: column;
     gap: 1em;
 }
+
 .settings-heading {
     grid-area: 1 / 1 / span 1 / span 3;
 }
+
 .settings-heading > .heading {
     margin: 0;
 }
+
 .settings-dehashed {
     display: flex;
     flex-direction: column;
@@ -43,7 +46,7 @@
 .settings-oauth-applications-row {
     display: grid;
     align-items: center;
-    grid-template-columns: 1fr 2fr 6em 6em;
+    grid-template-columns: 1fr 2fr 5em 5em 5em;
     gap: 1em;
     border-radius: 0.5em;
     border: 1px solid var(--text);
@@ -53,4 +56,5 @@
 
 .settings-oauth-applications-row > div {
 }
+
 

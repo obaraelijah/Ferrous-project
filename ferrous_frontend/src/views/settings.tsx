@@ -51,9 +51,11 @@ export default class Settings extends React.Component<SettingsProps, SettingsSta
 
     async saveSettings() {
         let { settings } = this.state;
+
         if (settings === null) {
             return;
         }
+
         (await Api.admin.settings.update(settings)).match(
             (_) => toast.success("Settings updated"),
             (err) => toast.error(err.message)
@@ -159,6 +161,7 @@ export default class Settings extends React.Component<SettingsProps, SettingsSta
                             <div className={"settings-oauth-applications-row"}>
                                 <div>Name</div>
                                 <div>Redirect URL</div>
+                                <div>Client ID</div>
                                 <div>Secret Key</div>
                                 <div>Delete</div>
                             </div>
@@ -167,6 +170,14 @@ export default class Settings extends React.Component<SettingsProps, SettingsSta
                                 <div key={x.uuid} className={"settings-oauth-applications-row"}>
                                     <div>{x.name}</div>
                                     <span>{x.redirectUri}</span>
+                                    <button
+                                        className={"icon-button"}
+                                        onClick={async () => {
+                                            await copyToClipboard(x.uuid);
+                                        }}
+                                    >
+                                        <CopyIcon />
+                                    </button>
                                     <button
                                         className={"icon-button"}
                                         onClick={async () => {
