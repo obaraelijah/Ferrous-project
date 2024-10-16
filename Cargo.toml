@@ -4,5 +4,5 @@ members = [
     "./ferrous",
     "./ferrous_sdk/generated",
     "./leech",
-    "./leech/probe-config",
+    "./leech/probe-config", "ferrous_sdk/generated",
 ]
