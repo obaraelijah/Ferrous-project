@@ -18,9 +18,7 @@ use rand::thread_rng;
 use rorm::prelude::*;
 use rorm::{insert, query, Database};
 use serde::Serialize;
-use serde_json::json;
 use sha2::{Digest, Sha256};
-use thiserror::Error;
 use utoipa::ToSchema;
 use uuid::Uuid;
 use webauthn_rs::prelude::Url;
@@ -88,17 +86,6 @@ struct Scope {
 ///
 /// It requires both the `state` parameter against CSRF, as well as a pkce challenge.
 /// The only supported pkce `code_challenge_method` is `S256`.
-#[utoipa::path(
-tag = "OAuth",
-context_path = "/api/v1/oauth",
-responses(
-    (status = 302, description = "The user is redirected to the frontend"),
-    (status = 400, description = "Client error", body = ApiErrorResponse),
-    (status = 500, description = "Server error", body = ApiErrorResponse),
-),
-params(AuthRequest),
-security(("api_key" = []))
-)]
 #[utoipa::path(
     tag = "OAuth",
     context_path = "/api/v1/oauth",
@@ -180,6 +167,7 @@ pub(crate) async fn auth(
             },
         );
     };
+
     let code_challenge = {
         let Some(pkce) = request.pkce else {
             return build_redirect(
@@ -303,17 +291,6 @@ pub(crate) async fn info(
     params(PathUuid),
     security(("api_key" = []))
 )]
-#[utoipa::path(
-    tag = "OAuth",
-    context_path = "/api/v1/oauth",
-    responses(
-        (status = 302, description = "The user is redirected back to the requesting client"),
-        (status = 400, description = "Client error", body = ApiErrorResponse),
-        (status = 500, description = "Server error", body = ApiErrorResponse),
-    ),
-    params(PathUuid),
-    security(("api_key" = []))
-)]
 #[get("/accept/{uuid}")]
 pub(crate) async fn accept(
     db: Data<Database>,
@@ -337,6 +314,7 @@ pub(crate) async fn accept(
         code = Uuid::new_v4();
         inner.accepted.insert(code, open_request.clone());
     };
+
     // Redirect
     let (redirect_uri,) = query!(db.as_ref(), (OauthClient::F.redirect_uri,))
         .condition(OauthClient::F.uuid.equals(open_request.client_pk))
@@ -345,30 +323,19 @@ pub(crate) async fn accept(
     #[derive(Serialize, Debug)]
     struct AcceptRedirect {
         code: Uuid,
-        state: Option<String>,
+        state: String,
     }
 
     build_redirect(
         &redirect_uri,
         AcceptRedirect {
             code,
-            state: String,
+            state: open_request.state,
         },
     )
 }
 
 /// Endpoint visited by user to deny a requesting application access
-#[utoipa::path(
-    tag = "OAuth",
-    context_path = "/api/v1/oauth",
-    responses(
-        (status = 302, description = "The user is redirected back to the requesting client"),
-        (status = 400, description = "Client error", body = ApiErrorResponse),
-        (status = 500, description = "Server error", body = ApiErrorResponse),
-    ),
-    params(PathUuid),
-    security(("api_key" = []))
-)]
 #[utoipa::path(
     tag = "OAuth",
     context_path = "/api/v1/oauth",
@@ -447,31 +414,44 @@ pub(crate) async fn token(
         inner
             .accepted
             .get(&code)
-            .ok_or(TokenError::UnknownCode)?
+            .ok_or(TokenError {
+                error: TokenErrorType::InvalidRequest,
+                error_description: Some("Invalid code"),
+            })?
             .clone()
     };
-
     let client = query!(db.as_ref(), OauthClient)
         .condition(OauthClient::F.uuid.equals(accepted.client_pk))
         .one()
         .await?;
 
-    let verifier = code_verifier.ok_or(TokenError::MissingPKCE)?;
+    let verifier = code_verifier.ok_or(TokenError {
+        error: TokenErrorType::InvalidRequest,
+        error_description: Some("Missing code_verifier"),
+    })?;
     let mut hasher = Sha256::new();
     hasher.update(verifier.as_bytes());
     let computed = BASE64_URL_SAFE_NO_PAD.encode(hasher.finalize());
+
     if accepted.code_challenge != computed {
         debug!(
             "PKCE failed; computed: {computed}, should be: {challenge}",
             challenge = accepted.code_challenge
         );
-        return Err(TokenError::InvalidPKCE);
+        return Err(TokenError {
+            error: TokenErrorType::InvalidRequest,
+            error_description: Some("Missing code_verifier doesn't match code_challenge"),
+        });
     }
+
     if client_id != client.uuid
         || client_secret != client.secret
         || redirect_uri != client.redirect_uri
     {
-        return Err(TokenError::InvalidClient);
+        return Err(TokenError {
+            error: TokenErrorType::InvalidClient,
+            error_description: Some("Invalid client_id, client_secret or redirect_uri"),
+        });
     }
 
     let access_token = Alphanumeric.sample_string(&mut thread_rng(), 32);
@@ -514,52 +494,32 @@ fn build_redirect(
     Ok(Redirect::to(url.to_string()))
 }
 
-/// Error type returned by [`/token`](token)
-#[derive(Debug, Error)]
-pub enum TokenError {
-    /// Missing PKCE code verifier
-    #[error("Missing PKCE code verifier")]
-    MissingPKCE,
-
-    /// PKCE challenge and verifier don't match
-    #[error("PKCE challenge and verifier don't match")]
-    InvalidPKCE,
-
-    /// The authorization code was not found
-    #[error("The authorization code was not found")]
-    UnknownCode,
-
-    /// Internal server error i.e. database error
-    #[error("Internal server error i.e. database error")]
-    InternalError,
-
-    /// The `client_id`, `client_secret` or `redirect_uri` don't match the registered client.
-    #[error(
-        "The `client_id`, `client_secret` or `redirect_uri` don't match the registered client."
-    )]
-    InvalidClient,
-}
-
-#[derive(Serialize, ToSchema)]
-pub(crate) struct TokenErrorResponse {
-    pub(crate) error: String,
+impl std::fmt::Display for TokenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.error_description {
+            Some(desc) => write!(f, "{:?}: {desc}", self.error),
+            None => write!(f, "{:?}", self.error),
+        }
+    }
 }
 
 impl From<rorm::Error> for TokenError {
     fn from(_: rorm::Error) -> Self {
         error!("Database error in `/token` endpoint");
-        Self::InternalError
+        Self {
+            error: TokenErrorType::ServerError,
+            error_description: Some("An internal server error occured"),
+        }
     }
 }
 
 impl ResponseError for TokenError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
-        (match self {
-            Self::InternalError => HttpResponse::InternalServerError(),
+        (match self.error {
+            TokenErrorType::ServerError => HttpResponse::InternalServerError(),
+            TokenErrorType::InvalidClient => HttpResponse::Unauthorized(),
             _ => HttpResponse::BadRequest(),
         })
-        .json(json!(TokenErrorResponse {
-            error: self.to_string()
-        }))
+        .json(self)
     }
 }
