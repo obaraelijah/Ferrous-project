@@ -25,7 +25,7 @@ workspace = false
 
 [tasks.verify-code]
 command = "cargo"
-args = ["build", "--package", "ferrous_sdk"]
+args = ["build", "--package", "ferrous-sdk"]
 workspace = false
 
 [tasks.generate]

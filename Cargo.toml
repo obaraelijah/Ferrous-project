@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "./ferrous",
-    "./ferrous_sdk/generated",
+    "./ferrous-sdk/generated",
     "./leech",
-    "./leech/probe-config", "ferrous_sdk/generated",
+    "./leech/probe-config",
 ]

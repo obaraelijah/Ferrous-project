@@ -1,5 +1,5 @@
 [package]
-name = "ferrous_sdk"
+name = "ferrous-sdk"
 version = "0.1.0"
 authors = ["Elijah Obara <elijahobara@samson.dev>"]
 description = "The core component of ferrous-project"
