@@ -5,3 +5,6 @@ vagrant/vars.yml
 .models.json
 
 /target
+
+ferrous_sdk/package-lock.json
+ferrous_sdk/node_modules/
