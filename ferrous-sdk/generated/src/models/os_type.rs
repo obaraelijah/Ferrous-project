@@ -24,7 +24,6 @@ pub enum OsType {
     Android,
     #[serde(rename = "FreeBSD")]
     FreeBsd,
-
 }
 
 impl ToString for OsType {
@@ -45,6 +44,3 @@ impl Default for OsType {
         Self::Unknown
     }
 }
-
-
-

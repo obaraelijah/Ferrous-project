@@ -9,8 +9,6 @@
 
 /// AggregatedPort : An open port on a host
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedPort {
     /// The port's uuid
@@ -34,7 +32,14 @@ pub struct AggregatedPort {
 
 impl AggregatedPort {
     /// An open port on a host
-    pub fn new(uuid: uuid::Uuid, port: i32, protocol: crate::models::PortProtocol, host: uuid::Uuid, services: Vec<uuid::Uuid>, comment: String) -> AggregatedPort {
+    pub fn new(
+        uuid: uuid::Uuid,
+        port: i32,
+        protocol: crate::models::PortProtocol,
+        host: uuid::Uuid,
+        services: Vec<uuid::Uuid>,
+        comment: String,
+    ) -> AggregatedPort {
         AggregatedPort {
             uuid,
             port,
@@ -45,4 +50,3 @@ impl AggregatedPort {
         }
     }
 }
-

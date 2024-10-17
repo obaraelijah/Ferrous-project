@@ -9,8 +9,6 @@
 
 /// AggregatedService : A detected service on a host
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedService {
     /// The service's uuid
@@ -20,13 +18,23 @@ pub struct AggregatedService {
     #[serde(rename = "name")]
     pub name: String,
     /// Optional version of the service
-    #[serde(rename = "version", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "version",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub version: Option<Option<String>>,
     /// The host this service is attached to
     #[serde(rename = "host")]
     pub host: uuid::Uuid,
     /// The port this service is attached to
-    #[serde(rename = "port", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "port",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub port: Option<Option<uuid::Uuid>>,
     /// A comment to the service
     #[serde(rename = "comment")]
@@ -35,7 +43,12 @@ pub struct AggregatedService {
 
 impl AggregatedService {
     /// A detected service on a host
-    pub fn new(uuid: uuid::Uuid, name: String, host: uuid::Uuid, comment: String) -> AggregatedService {
+    pub fn new(
+        uuid: uuid::Uuid,
+        name: String,
+        host: uuid::Uuid,
+        comment: String,
+    ) -> AggregatedService {
         AggregatedService {
             uuid,
             name,
@@ -46,4 +59,3 @@ impl AggregatedService {
         }
     }
 }
-

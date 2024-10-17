@@ -9,8 +9,6 @@
 
 /// ApiErrorResponse : Representation of an error response  `status_code` holds the error code, `message` a human readable description of the error
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ApiErrorResponse {
     #[serde(rename = "status_code")]
@@ -28,4 +26,3 @@ impl ApiErrorResponse {
         }
     }
 }
-

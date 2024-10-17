@@ -64,7 +64,6 @@ pub enum ApiStatusCode {
     Variant2003,
     #[serde(rename = "2004")]
     Variant2004,
-
 }
 
 impl ToString for ApiStatusCode {
@@ -105,6 +104,3 @@ impl Default for ApiStatusCode {
         Self::Variant1000
     }
 }
-
-
-

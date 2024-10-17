@@ -9,8 +9,6 @@
 
 /// AggregatedHost : A representation of an host.
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedHost {
     /// The host's uuid
@@ -22,7 +20,12 @@ pub struct AggregatedHost {
     #[serde(rename = "os_type")]
     pub os_type: crate::models::OsType,
     /// Response time in ms
-    #[serde(rename = "response_time", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "response_time",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_time: Option<Option<i32>>,
     /// The ports of a host
     #[serde(rename = "ports")]
@@ -37,7 +40,14 @@ pub struct AggregatedHost {
 
 impl AggregatedHost {
     /// A representation of an host.
-    pub fn new(uuid: uuid::Uuid, ip_addr: String, os_type: crate::models::OsType, ports: Vec<uuid::Uuid>, services: Vec<uuid::Uuid>, comment: String) -> AggregatedHost {
+    pub fn new(
+        uuid: uuid::Uuid,
+        ip_addr: String,
+        os_type: crate::models::OsType,
+        ports: Vec<uuid::Uuid>,
+        services: Vec<uuid::Uuid>,
+        comment: String,
+    ) -> AggregatedHost {
         AggregatedHost {
             uuid,
             ip_addr,
@@ -49,4 +59,3 @@ impl AggregatedHost {
         }
     }
 }
-

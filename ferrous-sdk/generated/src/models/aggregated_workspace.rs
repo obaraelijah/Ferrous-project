@@ -9,8 +9,6 @@
 
 /// AggregatedWorkspace : The aggregated results of a workspace
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedWorkspace {
     /// The hosts found by this workspace
@@ -26,7 +24,11 @@ pub struct AggregatedWorkspace {
 
 impl AggregatedWorkspace {
     /// The aggregated results of a workspace
-    pub fn new(hosts: ::std::collections::HashMap<String, crate::models::AggregatedHost>, ports: ::std::collections::HashMap<String, crate::models::AggregatedPort>, services: ::std::collections::HashMap<String, crate::models::AggregatedService>) -> AggregatedWorkspace {
+    pub fn new(
+        hosts: ::std::collections::HashMap<String, crate::models::AggregatedHost>,
+        ports: ::std::collections::HashMap<String, crate::models::AggregatedPort>,
+        services: ::std::collections::HashMap<String, crate::models::AggregatedService>,
+    ) -> AggregatedWorkspace {
         AggregatedWorkspace {
             hosts,
             ports,
@@ -34,4 +36,3 @@ impl AggregatedWorkspace {
         }
     }
 }
-
