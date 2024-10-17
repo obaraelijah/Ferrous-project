@@ -6,5 +6,5 @@ authors = ["Elijah Obara <elijahobara@samson.dev>"]
 license = "AGPL-3.0"
 
 [dependencies]
-regex = { version = "~1" }
+regex = { version = ">=1.5.5" }
 log = { version = "~0.4" }
