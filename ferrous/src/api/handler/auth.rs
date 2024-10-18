@@ -4,6 +4,7 @@ use actix_web::{get, post, HttpResponse};
 use argon2::password_hash::Error;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use chrono::Utc;
+use log::error;
 use log::debug;
 use rorm::prelude::ForeignModelByField;
 use rorm::{insert, query, update, Database, FieldAccess, Model};
