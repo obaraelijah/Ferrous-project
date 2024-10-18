@@ -2009,10 +2009,7 @@ dependencies = [
  "tonic-build",
  "trust-dns-resolver",
  "url",
- "utoipa",
- "utoipa-swagger-ui",
  "uuid",
- "webauthn-rs",
 ]
 
 [[package]]
