@@ -128,7 +128,7 @@ pub async fn start_tcp_con_port_scan(
         })
         .await;
 
-        info!("Finished tcp port scan");
-        
+    info!("Finished tcp port scan");
+
     Ok(())
 }

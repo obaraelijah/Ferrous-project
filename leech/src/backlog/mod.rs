@@ -126,7 +126,10 @@ const DB_QUERY_INTERVAL: Duration = Duration::from_secs(10);
 const DB_QUERY_LIMIT: u64 = 1000;
 
 /// Starts the backlog upload server
-pub async fn start_backlog(db: Database, ferrous_config: &FerrousConfig) -> Result<Backlog, String> {
+pub async fn start_backlog(
+    db: Database,
+    ferrous_config: &FerrousConfig,
+) -> Result<Backlog, String> {
     let ferrous_endpoint = Endpoint::from_str(ferrous_config.ferrous_uri.as_str())
         .map_err(|e| format!("error creating endpoint: {e}"))?;
 
