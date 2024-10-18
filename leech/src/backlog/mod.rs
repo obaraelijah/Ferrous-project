@@ -1,23 +1,31 @@
 //! This modules handles all backlog tasks
 
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::str::FromStr;
+use std::time::Duration;
 
-use log::{error, info};
-use rorm::{insert, Database};
+use log::{debug, error, info, warn};
+use rorm::{delete, insert, query, Database};
+use tonic::transport::Endpoint;
 use uuid::Uuid;
 
-use crate::models::{BruteforceSubdomainsResultInsert, DnsRecordType, TcpPortScanResultInsert};
+use crate::config::FerrousConfig;
+use crate::models::{
+    BruteforceSubdomainsResult, BruteforceSubdomainsResultInsert, DnsRecordType, TcpPortScanResult,
+    TcpPortScanResultInsert,
+};
+use crate::rpc::rpc_attacks::backlog_service_client::BacklogServiceClient;
 use crate::rpc::rpc_attacks::shared::dns_record::Record;
 use crate::rpc::rpc_attacks::{
-    BruteforceSubdomainRequest, BruteforceSubdomainResponse, TcpPortScanRequest,
+    BacklogBruteforceSubdomainRequest, BacklogTcpPortScanRequest, BruteforceSubdomainRequest,
+    BruteforceSubdomainResponse, TcpPortScanRequest,
 };
 
 /// The main struct for the Backlog,
 /// holds a connection to the database
 #[derive(Clone)]
 pub struct Backlog {
-    /// Connection to the database
-    pub(crate) db: Database,
+    db: Database,
 }
 
 impl Backlog {
@@ -111,4 +119,94 @@ impl Backlog {
             error!("Could not insert data into database: {err}");
         }
     }
+}
+
+const FERROUS_RETRY_INTERVAL: Duration = Duration::from_secs(5 * 60);
+const DB_QUERY_INTERVAL: Duration = Duration::from_secs(10);
+const DB_QUERY_LIMIT: u64 = 1000;
+
+/// Starts the backlog upload server
+pub async fn start_backlog(db: Database, ferrous_config: &FerrousConfig) -> Result<Backlog, String> {
+    let ferrous_endpoint = Endpoint::from_str(ferrous_config.ferrous_uri.as_str())
+        .map_err(|e| format!("error creating endpoint: {e}"))?;
+
+    let db_clone = db.clone();
+    tokio::spawn(async move {
+        loop {
+            let mut ferrous;
+            loop {
+                let Ok(chan) = ferrous_endpoint.connect().await else {
+                    debug!(
+                        "could not connect to ferrous, retrying in {} minutes",
+                        FERROUS_RETRY_INTERVAL.as_secs() / 60
+                    );
+                    tokio::time::sleep(FERROUS_RETRY_INTERVAL).await;
+                    continue;
+                };
+                ferrous = BacklogServiceClient::new(chan);
+                info!("connected to ferrous @ {}", ferrous_endpoint.uri());
+                break;
+            }
+
+            let mut data_changed;
+            loop {
+                data_changed = false;
+                let Ok(mut db_trx) = db_clone.start_transaction().await else {
+                    continue;
+                };
+
+                if let Ok(data) = query!(&mut db_trx, BruteforceSubdomainsResult)
+                    .limit(DB_QUERY_LIMIT)
+                    .all()
+                    .await
+                {
+                    if !data.is_empty() {
+                        data_changed = true;
+                        if let Err(e) = delete!(&mut db_trx, BruteforceSubdomainsResult)
+                            .bulk(&data)
+                            .await
+                        {
+                            warn!("bulk delete failed: {e}");
+                        };
+
+                        let data: BacklogBruteforceSubdomainRequest = data.into();
+                        if let Err(e) = ferrous.bruteforce_subdomains(data).await {
+                            error!("could not send data to ferrous: {e}. Restarting connection");
+                            break;
+                        }
+                    };
+                }; // end BruteforceSubdomainsResult
+
+                if let Ok(data) = query!(&mut db_trx, TcpPortScanResult)
+                    .limit(DB_QUERY_LIMIT)
+                    .all()
+                    .await
+                {
+                    if !data.is_empty() {
+                        data_changed = true;
+                        if let Err(e) = delete!(&mut db_trx, TcpPortScanResult).bulk(&data).await {
+                            warn!("bulk delete failed: {e}");
+                        };
+
+                        let data: BacklogTcpPortScanRequest = data.into();
+                        if let Err(e) = ferrous.tcp_port_scan(data).await {
+                            error!("could not send data to ferrous: {e}. restarting connection");
+                            break;
+                        }
+                    }
+                }; // end TcpPortScanResult
+
+                if data_changed {
+                    if let Err(e) = db_trx.commit().await {
+                        error!("error committing changes to database: {e}");
+                    }
+                    info!("database committed");
+                }
+
+                tokio::time::sleep(DB_QUERY_INTERVAL).await;
+            } // end database query loop
+        }
+    });
+
+    Ok(Backlog { db })
 }
