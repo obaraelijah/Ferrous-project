@@ -3,7 +3,6 @@ use std::sync::TryLockError;
 use actix_toolbox::tb_middleware::{actix_session, Session};
 use actix_web::body::BoxBody;
 use actix_web::HttpResponse;
-use attacks::SimpleTcpPortScanResult;
 use log::{debug, error, info, trace, warn};
 use rorm::db::Executor;
 use rorm::{query, FieldAccess, Model};
@@ -55,35 +54,6 @@ pub struct UuidResponse {
 #[derive(Deserialize, IntoParams)]
 pub struct PathUuid {
     pub(crate) uuid: Uuid,
-}
-
-#[derive(Deserialize, ToSchema, IntoParams)]
-pub struct PageParams {
-    /// Number of items to retrieve
-    #[schema(example = 50)]
-    
-    pub(crate) limit: u64,
-    /// Position in the whole list to start retrieving from
-    #[schema(example = 0)]
-    pub(crate) offset: u64,
-}
-
-#[derive(Serialize, ToSchema)]
-#[aliases(TcpPortScanResultsPage = Page<SimpleTcpPortScanResult>)]
-pub(crate) struct Page<T> {
-    /// The page's items
-    pub(crate) items: Vec<T>,
-    
-    /// The limit this page was retrieved with
-    #[schema(example = 50)]
-    pub(crate) limit: u64,
-    
-    /// The offset this page was retrieved with
-    #[schema(example = 0)]
-    pub(crate) offset: u64,
-    
-    /// The total number of items this page is a subset of
-    pub(crate) total: u64,
 }
 
 /// Color value
@@ -169,6 +139,7 @@ pub enum ApiStatusCode {
     SessionError = 2002,
     WebauthnError = 2003,
     DehashedNotAvailable = 2004,
+    NoLeechAvailable = 2005,
 }
 
 /// Representation of an error response
@@ -203,28 +174,15 @@ pub enum ApiError {
     InvalidJson(#[from] serde_json::Error),
     #[error("Payload overflow: {0}")]
     PayloadOverflow(String),
-    #[error("Internal server error")]
-    InternalServerError,
-    #[error("Database error occurred")]
-    DatabaseError(#[from] rorm::Error),
-    #[error("Internal server error")]
-    InvalidHash(argon2::password_hash::Error),
-    #[error("Session error occurred")]
-    SessionInsert(#[from] actix_session::SessionInsertError),
-    #[error("Session error occurred")]
-    SessionGet(#[from] actix_session::SessionGetError),
+
     #[error("Unauthenticated")]
     Unauthenticated,
     #[error("2FA is missing")]
     Missing2FA,
-    #[error("Corrupt session")]
-    SessionCorrupt,
     #[error("You are missing privileges")]
     MissingPrivileges,
     #[error("No security key is available")]
     NoSecurityKeyAvailable,
-    #[error("Webauthn error")]
-    Webauthn(#[from] WebauthnError),
     #[error("User already exists")]
     UserAlreadyExists,
     #[error("Invalid username")]
@@ -247,8 +205,25 @@ pub enum ApiError {
     UsernameAlreadyOccupied,
     #[error("Invalid name specified")]
     InvalidName,
+
+    #[error("Internal server error")]
+    InternalServerError,
+    #[error("Database error occurred")]
+    DatabaseError(#[from] rorm::Error),
+    #[error("Internal server error")]
+    InvalidHash(argon2::password_hash::Error),
+    #[error("Session error occurred")]
+    SessionInsert(#[from] actix_session::SessionInsertError),
+    #[error("Session error occurred")]
+    SessionGet(#[from] actix_session::SessionGetError),
+    #[error("Corrupt session")]
+    SessionCorrupt,
+    #[error("Webauthn error")]
+    Webauthn(#[from] WebauthnError),
     #[error("Dehashed is not available")]
     DehashedNotAvailable,
+    #[error("No leech available")]
+    NoLeechAvailable,
 }
 
 impl actix_web::ResponseError for ApiError {
@@ -430,6 +405,9 @@ impl actix_web::ResponseError for ApiError {
             )),
             ApiError::DehashedNotAvailable => HttpResponse::InternalServerError().json(
                 ApiErrorResponse::new(ApiStatusCode::DehashedNotAvailable, self.to_string()),
+            ),
+            ApiError::NoLeechAvailable => HttpResponse::InternalServerError().json(
+                ApiErrorResponse::new(ApiStatusCode::NoLeechAvailable, self.to_string()),
             ),
         }
     }

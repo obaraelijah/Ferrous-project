@@ -13,6 +13,7 @@ use crate::api::handler::{
 use crate::models;
 
 struct SecurityAddon;
+
 impl Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
@@ -25,6 +26,7 @@ impl Modify for SecurityAddon {
 }
 
 struct SecurityAddon2;
+
 impl Modify for SecurityAddon2 {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {

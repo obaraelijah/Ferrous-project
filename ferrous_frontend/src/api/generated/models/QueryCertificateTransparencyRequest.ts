@@ -23,12 +23,6 @@ export interface QueryCertificateTransparencyRequest {
      * @type {string}
      * @memberof QueryCertificateTransparencyRequest
      */
-    leechUuid: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof QueryCertificateTransparencyRequest
-     */
     target: string;
     /**
      * 
@@ -61,7 +55,6 @@ export interface QueryCertificateTransparencyRequest {
  */
 export function instanceOfQueryCertificateTransparencyRequest(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "leechUuid" in value;
     isInstance = isInstance && "target" in value;
     isInstance = isInstance && "includeExpired" in value;
     isInstance = isInstance && "maxRetries" in value;
@@ -80,8 +73,8 @@ export function QueryCertificateTransparencyRequestFromJSONTyped(json: any, igno
         return json;
     }
     return {
-
-        'leechUuid': json['leech_uuid'],
+        
+        'target': json['target'],
         'includeExpired': json['include_expired'],
         'maxRetries': json['max_retries'],
         'retryInterval': json['retry_interval'],
@@ -97,8 +90,7 @@ export function QueryCertificateTransparencyRequestToJSON(value?: QueryCertifica
         return null;
     }
     return {
-
-        'leech_uuid': value.leechUuid,
+        
         'target': value.target,
         'include_expired': value.includeExpired,
         'max_retries': value.maxRetries,
