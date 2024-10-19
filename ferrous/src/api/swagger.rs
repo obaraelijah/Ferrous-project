@@ -13,7 +13,6 @@ use crate::api::handler::{
 use crate::models;
 
 struct SecurityAddon;
-
 impl Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
@@ -26,7 +25,6 @@ impl Modify for SecurityAddon {
 }
 
 struct SecurityAddon2;
-
 impl Modify for SecurityAddon2 {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
@@ -152,7 +150,7 @@ impl Modify for SecurityAddon2 {
         api_keys::CreateApiKeyRequest,
         api_keys::GetApiKeysResponse,
         api_keys::UpdateApiKeyRequest,
-        hosts::GetAllHostsResponse,
+        handler::HostResultsPage,
         hosts::SimpleHost,
         hosts::FullHost,
         hosts::UpdateHostRequest,
@@ -168,11 +166,11 @@ impl Modify for SecurityAddon2 {
         workspace_tags::UpdateWorkspaceTag,
         workspace_tags::CreateWorkspaceTagRequest,
         ports::SimplePort,
-        ports::GetAllPortsResponse,
+        handler::PortResultsPage,
         services::SimpleService,
-        services::GetAllServicesResponse,
+        handler::ServiceResultsPage,
         domains::SimpleDomain,
-        domains::GetAllDomainsResponse,
+        handler::DomainResultsPage,
     )),
     modifiers(&SecurityAddon, &SecurityAddon2)
 )]
