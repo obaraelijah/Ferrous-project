@@ -1,11 +1,12 @@
+//! Everything regarding authentication, besides oauth
+
 use actix_toolbox::tb_middleware::Session;
 use actix_web::web::{Data, Json};
 use actix_web::{get, post, HttpResponse};
 use argon2::password_hash::Error;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use chrono::Utc;
-use log::debug;
-use log::error;
+use log::{debug, error};
 use rorm::prelude::ForeignModelByField;
 use rorm::{insert, query, update, Database, FieldAccess, Model};
 use serde::Deserialize;
@@ -37,12 +38,13 @@ use crate::models::{User, UserKey, UserKeyInsert};
     )
 )]
 #[get("/test", wrap = "AuthenticationRequired")]
-pub(crate) async fn test() -> HttpResponse {
+pub async fn test() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
+/// The request to login
 #[derive(ToSchema, Deserialize)]
-pub(crate) struct LoginRequest {
+pub struct LoginRequest {
     #[schema(example = "user123")]
     username: String,
     #[schema(example = "super-secure-password")]
@@ -61,7 +63,7 @@ pub(crate) struct LoginRequest {
     request_body = LoginRequest,
 )]
 #[post("/login")]
-pub(crate) async fn login(
+pub async fn login(
     req: Json<LoginRequest>,
     db: Data<Database>,
     session: Session,
@@ -69,7 +71,6 @@ pub(crate) async fn login(
     let mut tx = db.start_transaction().await?;
 
     let user = query!(&mut tx, User)
-        .transaction(&mut tx)
         .condition(User::F.username.equals(&req.username))
         .optional()
         .await?
@@ -112,7 +113,7 @@ pub(crate) async fn login(
     ),
 )]
 #[get("/logout")]
-pub(crate) async fn logout(
+pub async fn logout(
     session: Session,
     ws_manager_chan: Data<WsManagerChan>,
 ) -> ApiResult<HttpResponse> {
@@ -145,7 +146,7 @@ pub(crate) async fn logout(
     ),
 )]
 #[post("/startAuth")]
-pub(crate) async fn start_auth(
+pub async fn start_auth(
     db: Data<Database>,
     session: Session,
     webauthn: Data<Webauthn>,
@@ -168,6 +169,7 @@ pub(crate) async fn start_auth(
     }
 
     let allowed_keys: Vec<Passkey> = keys.into_iter().map(|k| k.key.0).collect();
+
     let (rcr, auth_state) = webauthn.start_passkey_authentication(&allowed_keys)?;
 
     session.insert("auth_state", (uuid, auth_state))?;
@@ -177,7 +179,7 @@ pub(crate) async fn start_auth(
 
 /// Finishes the authentication with a security key
 ///
-/// Use `startAuth` to retrieve the challenge response data.
+/// Use `startAuth` to retrieve the challenge response data.  
 #[utoipa::path(
     tag = "Authentication",
     context_path = "/api/v1/auth",
@@ -189,7 +191,7 @@ pub(crate) async fn start_auth(
     request_body = inline(Object)
 )]
 #[post("/finishAuth")]
-pub(crate) async fn finish_auth(
+pub async fn finish_auth(
     auth: Json<PublicKeyCredential>,
     db: Data<Database>,
     session: Session,
@@ -233,7 +235,7 @@ pub(crate) async fn finish_auth(
     ),
 )]
 #[post("/startRegister")]
-pub(crate) async fn start_register(
+pub async fn start_register(
     db: Data<Database>,
     session: Session,
     webauthn: Data<Webauthn>,
@@ -241,7 +243,6 @@ pub(crate) async fn start_register(
     if !session.get("logged_in")?.ok_or(ApiError::Unauthenticated)? {
         return Err(ApiError::Unauthenticated);
     }
-
     let uuid: Uuid = session.get("uuid")?.ok_or(ApiError::SessionCorrupt)?;
 
     let mut tx = db.start_transaction().await?;
@@ -284,8 +285,9 @@ pub(crate) async fn start_register(
     Ok(Json(ccr))
 }
 
+/// The request to finish the registration of a security key
 #[derive(Deserialize, ToSchema)]
-pub(crate) struct FinishRegisterRequest {
+pub struct FinishRegisterRequest {
     // TODO: provide a example json for this request
     #[serde(flatten)]
     #[schema(example = json!({}), value_type = Object)]
@@ -308,7 +310,7 @@ pub(crate) struct FinishRegisterRequest {
     request_body = FinishRegisterRequest
 )]
 #[post("/finishRegister")]
-pub(crate) async fn finish_register(
+pub async fn finish_register(
     req: Json<FinishRegisterRequest>,
     db: Data<Database>,
     session: Session,

@@ -1,3 +1,5 @@
+//! This module holds all attack handlers and their request and response schemas
+
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::ops::RangeInclusive;
 
@@ -10,6 +12,8 @@ use futures::StreamExt;
 use ipnet::IpNet;
 use ipnetwork::IpNetwork;
 use log::{debug, error, warn};
+use rand::prelude::IteratorRandom;
+use rand::thread_rng;
 use rorm::db::transaction::Transaction;
 use rorm::prelude::ForeignModelByField;
 use rorm::{and, insert, query, update, Database, FieldAccess, Model};
@@ -29,6 +33,7 @@ use crate::chan::{
 };
 use crate::models::{
     Attack, AttackInsert, AttackType, BruteforceSubdomainsResult, BruteforceSubdomainsResultInsert,
+    CertificateTransparencyResultInsert, CertificateTransparencyValueNameInsert,
     DehashedQueryResultInsert, DnsRecordType, TcpPortScanResult, TcpPortScanResultInsert,
     Workspace, WorkspaceMember,
 };
@@ -288,11 +293,14 @@ pub struct ScanTcpPortsRequest {
     pub(crate) workspace_uuid: Uuid,
 }
 
+/// Single port or a range of ports
 #[derive(Deserialize, ToSchema)]
 #[serde(untagged)]
 pub enum PortOrRange {
-    #[schema(value_type = u32, example = 8000)]
+    /// A single port
+    #[schema(example = 8000)]
     Port(u16),
+    /// In inclusive range of ports
     #[schema(value_type = String, example = "1-1024")]
     Range(#[serde(deserialize_with = "deserialize_port_range")] RangeInclusive<u16>),
 }
@@ -509,7 +517,6 @@ pub async fn scan_tcp_ports(
 /// The settings to configure a certificate transparency request
 #[derive(Deserialize, ToSchema)]
 pub struct QueryCertificateTransparencyRequest {
-    pub(crate) leech_uuid: Uuid,
     #[schema(example = "example.com")]
     pub(crate) target: String,
     #[schema(example = true)]
@@ -553,8 +560,10 @@ pub async fn query_certificate_transparency(
         .get_ref()
         .read()
         .await
-        .get(&req.leech_uuid)
-        .ok_or(ApiError::InvalidLeech)?
+        .iter()
+        .choose(&mut thread_rng())
+        .ok_or(ApiError::NoLeechAvailable)?
+        .1
         .clone();
 
     let uuid = insert!(db.as_ref(), AttackInsert)
@@ -579,6 +588,54 @@ pub async fn query_certificate_transparency(
         match client.query_certificate_transparency(req).await {
             Ok(res) => {
                 let res = res.into_inner();
+
+                let mut tx = db.start_transaction().await.unwrap();
+
+                for cert_entry in &res.entries {
+                    let cert_uuid = insert!(&mut tx, CertificateTransparencyResultInsert)
+                        .return_primary_key()
+                        .single(&CertificateTransparencyResultInsert {
+                            uuid: Uuid::new_v4(),
+                            created_at: Utc::now(),
+                            attack: ForeignModelByField::Key(uuid),
+                            issuer_name: cert_entry.issuer_name.clone(),
+                            serial_number: cert_entry.serial_number.clone(),
+                            common_name: cert_entry.common_name.clone(),
+                            not_before: cert_entry.not_before.clone().map(|x| {
+                                DateTime::from_naive_utc_and_offset(
+                                    NaiveDateTime::from_timestamp_millis(x.seconds * 1000).unwrap(),
+                                    Utc,
+                                )
+                            }),
+                            not_after: cert_entry.not_after.clone().map(|x| {
+                                DateTime::from_naive_utc_and_offset(
+                                    NaiveDateTime::from_timestamp_millis(x.seconds * 1000).unwrap(),
+                                    Utc,
+                                )
+                            }),
+                        })
+                        .await
+                        .unwrap();
+
+                    let value_names: Vec<_> = cert_entry
+                        .value_names
+                        .clone()
+                        .into_iter()
+                        .map(|x| CertificateTransparencyValueNameInsert {
+                            uuid: Uuid::new_v4(),
+                            value_name: x,
+                            ct_result: ForeignModelByField::Key(cert_uuid),
+                        })
+                        .collect();
+
+                    insert!(&mut tx, CertificateTransparencyValueNameInsert)
+                        .return_nothing()
+                        .bulk(&value_names)
+                        .await
+                        .unwrap();
+                }
+
+                tx.commit().await.unwrap();
 
                 if let Err(err) = ws_manager_chan
                     .send(WsManagerMessage::Message(
@@ -788,7 +845,7 @@ pub async fn query_dehashed(
 
 /// A simple version of an attack
 #[derive(Serialize, ToSchema)]
-pub(crate) struct SimpleAttack {
+pub struct SimpleAttack {
     pub(crate) uuid: Uuid,
     pub(crate) workspace_uuid: Uuid,
     pub(crate) attack_type: AttackType,
@@ -810,7 +867,7 @@ pub(crate) struct SimpleAttack {
     security(("api_key" = []))
 )]
 #[get("/attacks/{uuid}")]
-pub(crate) async fn get_attack(
+pub async fn get_attack(
     req: Path<PathUuid>,
     db: Data<Database>,
     session: Session,
@@ -867,14 +924,15 @@ pub(crate) async fn get_attack(
     Ok(Json(attack?))
 }
 
+/// A simple representation of a tcp port scan result
 #[derive(Serialize, ToSchema)]
-pub(crate) struct SimpleTcpPortScanResult {
-    pub uuid: Uuid,
-    pub attack: Uuid,
-    pub created_at: DateTime<Utc>,
+pub struct SimpleTcpPortScanResult {
+    uuid: Uuid,
+    attack: Uuid,
+    created_at: DateTime<Utc>,
     #[schema(value_type = String)]
-    pub address: IpNetwork,
-    pub port: u16,
+    address: IpNetwork,
+    port: u16,
 }
 
 /// Retrieve a tcp port scan's results by the attack's id
@@ -890,7 +948,7 @@ tag = "Attacks",
     security(("api_key" = []))
 )]
 #[get("/attacks/{uuid}/tcpPortScanResults")]
-pub(crate) async fn get_tcp_port_scan_results(
+pub async fn get_tcp_port_scan_results(
     path: Path<PathUuid>,
     query: Query<PageParams>,
     session: Session,
@@ -950,7 +1008,7 @@ pub(crate) async fn get_tcp_port_scan_results(
     security(("api_key" = []))
 )]
 #[delete("/attacks/{uuid}")]
-pub(crate) async fn delete_attack(
+pub async fn delete_attack(
     req: Path<PathUuid>,
     session: Session,
     db: Data<Database>,
