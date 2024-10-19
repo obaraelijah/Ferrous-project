@@ -1,7 +1,7 @@
 use rorm::prelude::*;
 use uuid::Uuid;
 
-/// The data collectors of kraken
+/// The data collectors of ferrous
 #[derive(Model)]
 pub struct Leech {
     /// Primary key of the leech

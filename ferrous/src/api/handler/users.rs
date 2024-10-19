@@ -1,3 +1,5 @@
+//! User management is defined here
+
 use actix_toolbox::tb_middleware::Session;
 use actix_web::web::{Data, Json, Path};
 use actix_web::{delete, get, post, put, HttpResponse};
@@ -12,7 +14,6 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::api::handler::{ApiError, ApiResult, PathUuid};
-use crate::api::middleware::{AdminRequired, AuthenticationRequired};
 use crate::chan::{WsManagerChan, WsManagerMessage};
 use crate::models::User;
 use crate::modules::user::create::create_user_transaction;
@@ -22,7 +23,7 @@ use crate::modules::user::create::create_user_transaction;
 /// Note that `username` is unique, but as it is changeable,
 /// identify the user by its `uuid`
 #[derive(Serialize, ToSchema)]
-pub(crate) struct UserResponse {
+pub struct UserResponse {
     pub(crate) uuid: Uuid,
     #[schema(example = "user123")]
     pub(crate) username: String,
@@ -30,8 +31,9 @@ pub(crate) struct UserResponse {
     pub(crate) display_name: String,
 }
 
+/// The request to create a user
 #[derive(Deserialize, ToSchema)]
-pub(crate) struct CreateUserRequest {
+pub struct CreateUserRequest {
     #[schema(example = "user123")]
     pub(crate) username: String,
     #[schema(example = "Anon")]
@@ -42,9 +44,9 @@ pub(crate) struct CreateUserRequest {
     pub(crate) admin: bool,
 }
 
+/// The response
 #[derive(Serialize, ToSchema)]
-pub(crate) struct CreateUserResponse {
-    #[param(example = "user123")]
+pub struct CreateUserResponse {
     pub(crate) uuid: String,
 }
 
