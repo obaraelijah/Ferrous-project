@@ -7,13 +7,13 @@ import WorkspaceMenu from "./components/workspace-menu";
 import { FullWorkspace } from "../../api/generated";
 import WorkspaceHost from "./workspace-host";
 import WorkspaceHosts from "./workspace-hosts";
+import WorkspaceAttacks from "./workspace-attacks";
 
 type WorkspaceProps = {
     uuid: UUID;
     view: WorkspaceView;
     host_uuid?: UUID;
 };
-
 type WorkspaceState = {
     workspace: FullWorkspace | null;
 };
@@ -23,10 +23,12 @@ export type WorkspaceView = "search" | "attacks" | "hosts" | "data" | "workspace
 export default class Workspace extends React.Component<WorkspaceProps, WorkspaceState> {
     constructor(props: WorkspaceProps) {
         super(props);
+
         this.state = {
             workspace: null,
         };
     }
+
     componentDidMount() {
         Api.workspaces.get(this.props.uuid).then((res) =>
             res.match(
@@ -35,8 +37,10 @@ export default class Workspace extends React.Component<WorkspaceProps, Workspace
             )
         );
     }
+
     render() {
         console.log(this.props.host_uuid);
+
         return (
             <div className={"workspace-container"}>
                 <WorkspaceHeading
@@ -53,7 +57,7 @@ export default class Workspace extends React.Component<WorkspaceProps, Workspace
                 ) : this.props.view === "workspace_settings" ? (
                     <></>
                 ) : this.props.view === "attacks" ? (
-                    <></>
+                    <WorkspaceAttacks workspace={this.state.workspace} />
                 ) : this.props.view === "hosts" ? (
                     <WorkspaceHosts workspace={this.state.workspace} />
                 ) : this.props.view === "single_host" && this.props.host_uuid !== undefined ? (
