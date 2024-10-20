@@ -1,6 +1,6 @@
 import React from "react";
 import { FullWorkspace, OsType, SimpleHost } from "../../api/generated";
-import "../../styling/workspace-host.css";
+import "../../styling/workspace-hosts.css";
 import Input from "../../components/input";
 import { Api } from "../../api/api";
 import { toast } from "react-toastify";
@@ -29,9 +29,9 @@ export default class WorkspaceHosts extends React.Component<WorkspaceHostsProps,
     }
 
     async retrieveHosts() {
-        (await Api.workspaces.hosts.all(this.props.workspace.uuid)).match(
-            (hosts) => this.setState({ hosts: hosts.hosts }),
-            (err) => toast.error(err.message)
+        (await Api.workspaces.hosts.all(this.props.workspace.uuid, 1000, 0)).match(
+            ({ items }) => this.setState({ hosts: items }),
+            (err) => toast.error(err.message),
         );
     }
 

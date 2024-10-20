@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * Query parameters for paginated data
  * @export
  * @interface PageParams
  */
