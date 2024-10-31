@@ -158,7 +158,7 @@ impl Modify for SecurityAddon2 {
         hosts::UpdateHostRequest,
         models::OsType,
         global_tags::CreateGlobalTagRequest,
-        handler::Color,
+        models::Color,
         global_tags::FullGlobalTag,
         global_tags::GetGlobalTagsResponse,
         global_tags::UpdateGlobalTag,

@@ -1,6 +1,6 @@
 //! A scalable pen-testing platform.
 //!
-//! # Ferrous
+//! # ferrous
 //! The core of the ferrous project.
 //!
 //! It provides an API for accessing and retrieving data and events for the user
@@ -18,25 +18,18 @@
 use std::fs::read_to_string;
 use std::io;
 use std::io::Write;
-use std::process::exit;
 use std::sync::Arc;
 
 use actix_toolbox::logging::setup_logging;
 use actix_web::cookie::Key;
-use argon2::password_hash::SaltString;
-use argon2::{Argon2, PasswordHasher};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
-use clap::{Command, Parser, Subcommand};
-use rand::thread_rng;
-use rorm::{
-    cli, insert, query, Database, DatabaseConfiguration, DatabaseDriver, FieldAccess, Model,
-};
-use webauthn_rs::prelude::Uuid;
+use clap::{Parser, Subcommand};
+use rorm::{cli, Database, DatabaseConfiguration, DatabaseDriver};
 
 use crate::api::server;
 use crate::config::Config;
-use crate::models::{User, UserInsert};
+use crate::models::User;
 use crate::rpc::server::start_rpc_server;
 
 pub mod api;
@@ -66,7 +59,7 @@ pub enum Command {
 #[derive(Parser)]
 #[clap(version, about = "The ferrous core")]
 pub struct Cli {
-    /// Specify an alternative path to the config file    
+    /// Specify an alternative path to the config file
     #[clap(long = "config-path")]
     #[clap(default_value_t = String::from("/etc/ferrous/config.toml"))]
     config_path: String,
@@ -107,6 +100,7 @@ async fn main() -> Result<(), String> {
         .map_err(|e| e.to_string())?,
         Command::Start => {
             let db = get_db(&config).await?;
+
             let settings_manager_chan = Arc::new(
                 chan::start_settings_manager(&db)
                     .await
@@ -115,7 +109,6 @@ async fn main() -> Result<(), String> {
 
             let (rpc_manager_chan, rpc_clients) = chan::start_rpc_manager(db.clone()).await?;
             let ws_manager_chan = chan::start_ws_manager().await?;
-
             let dehashed_scheduler =
                 chan::start_dehashed_manager(settings_manager_chan.clone()).await?;
 
@@ -162,38 +155,13 @@ async fn create_user(db: Database) -> Result<(), String> {
     stdin.read_line(&mut username).unwrap();
     let username = username.trim();
 
-    if query!(&db, (User::F.username,))
-        .condition(User::F.username.equals(username))
-        .optional()
-        .await
-        .unwrap()
-        .is_some()
-    {
-        eprintln!("There is already a user with that name");
-        exit(1);
-    }
-
     print!("Enter a display name: ");
     stdout.flush().unwrap();
     stdin.read_line(&mut display_name).unwrap();
 
     let password = rpassword::prompt_password("Enter password: ").unwrap();
 
-    let salt = SaltString::generate(&mut thread_rng());
-    let hashed_password = Argon2::default()
-        .hash_password(password.as_bytes(), &salt)
-        .unwrap()
-        .to_string();
-
-    insert!(&db, UserInsert)
-        .single(&UserInsert {
-            username: username.to_string(),
-            display_name: display_name.to_string(),
-            password_hash: hashed_password,
-            admin: true,
-            last_login: None,
-            uuid: Uuid::new_v4(),
-        })
+    User::insert(&db, username.to_string(), display_name, password, true)
         .await
         .map_err(|e| format!("Failed to create user: {e}"))?;
 
@@ -221,6 +189,7 @@ async fn get_db(config: &Config) -> Result<Database, String> {
         statement_log_level: None,
         slow_statement_log_level: None,
     };
+
     Database::connect(db_config)
         .await
         .map_err(|e| format!("Error connecting to the database: {e}"))
