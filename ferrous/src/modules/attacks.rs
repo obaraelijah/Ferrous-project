@@ -522,7 +522,7 @@ impl LeechAttackContext {
             }
         }
     }
-    
+
     /// Insert an aggregated domain if it doesn't exist yet.
     ///
     /// Returns whether the domain was inserted or not.

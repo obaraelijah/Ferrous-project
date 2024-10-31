@@ -9,8 +9,6 @@
 
 /// AggregatedDomain : A domain
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedDomain {
     /// Global tags
@@ -32,7 +30,13 @@ pub struct AggregatedDomain {
 
 impl AggregatedDomain {
     /// A domain
-    pub fn new(global_tags: Vec<String>, local_tags: Vec<String>, uuid: uuid::Uuid, domain: String, comment: String) -> AggregatedDomain {
+    pub fn new(
+        global_tags: Vec<String>,
+        local_tags: Vec<String>,
+        uuid: uuid::Uuid,
+        domain: String,
+        comment: String,
+    ) -> AggregatedDomain {
         AggregatedDomain {
             global_tags,
             local_tags,
@@ -42,4 +46,3 @@ impl AggregatedDomain {
         }
     }
 }
-

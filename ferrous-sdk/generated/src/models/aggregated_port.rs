@@ -38,7 +38,16 @@ pub struct AggregatedPort {
 
 impl AggregatedPort {
     /// An open port on a host
-    pub fn new(global_tags: Vec<String>, local_tags: Vec<String>, uuid: uuid::Uuid, port: i32, protocol: crate::models::PortProtocol, host: uuid::Uuid, services: Vec<uuid::Uuid>, comment: String) -> AggregatedPort {
+    pub fn new(
+        global_tags: Vec<String>,
+        local_tags: Vec<String>,
+        uuid: uuid::Uuid,
+        port: i32,
+        protocol: crate::models::PortProtocol,
+        host: uuid::Uuid,
+        services: Vec<uuid::Uuid>,
+        comment: String,
+    ) -> AggregatedPort {
         AggregatedPort {
             global_tags,
             local_tags,

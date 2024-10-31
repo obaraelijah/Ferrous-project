@@ -46,7 +46,16 @@ pub struct AggregatedHost {
 
 impl AggregatedHost {
     /// A representation of an host.
-    pub fn new(global_tags: Vec<String>, local_tags: Vec<String>, uuid: uuid::Uuid, ip_addr: String, os_type: crate::models::OsType, ports: Vec<uuid::Uuid>, services: Vec<uuid::Uuid>, comment: String) -> AggregatedHost {
+    pub fn new(
+        global_tags: Vec<String>,
+        local_tags: Vec<String>,
+        uuid: uuid::Uuid,
+        ip_addr: String,
+        os_type: crate::models::OsType,
+        ports: Vec<uuid::Uuid>,
+        services: Vec<uuid::Uuid>,
+        comment: String,
+    ) -> AggregatedHost {
         AggregatedHost {
             global_tags,
             local_tags,

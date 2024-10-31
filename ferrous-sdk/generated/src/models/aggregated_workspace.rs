@@ -27,7 +27,12 @@ pub struct AggregatedWorkspace {
 
 impl AggregatedWorkspace {
     /// The aggregated results of a workspace
-    pub fn new(hosts: ::std::collections::HashMap<String, crate::models::AggregatedHost>, ports: ::std::collections::HashMap<String, crate::models::AggregatedPort>, services: ::std::collections::HashMap<String, crate::models::AggregatedService>, domains: ::std::collections::HashMap<String, crate::models::AggregatedDomain>) -> AggregatedWorkspace {
+    pub fn new(
+        hosts: ::std::collections::HashMap<String, crate::models::AggregatedHost>,
+        ports: ::std::collections::HashMap<String, crate::models::AggregatedPort>,
+        services: ::std::collections::HashMap<String, crate::models::AggregatedService>,
+        domains: ::std::collections::HashMap<String, crate::models::AggregatedDomain>,
+    ) -> AggregatedWorkspace {
         AggregatedWorkspace {
             hosts,
             ports,

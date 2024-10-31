@@ -9,8 +9,6 @@
 
 /// AggregatedTags : Set of global and local tags
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AggregatedTags {
     /// Global tags
@@ -30,4 +28,3 @@ impl AggregatedTags {
         }
     }
 }
-

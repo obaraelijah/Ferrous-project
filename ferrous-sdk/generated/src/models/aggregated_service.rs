@@ -49,7 +49,14 @@ pub struct AggregatedService {
 
 impl AggregatedService {
     /// A detected service on a host
-    pub fn new(global_tags: Vec<String>, local_tags: Vec<String>, uuid: uuid::Uuid, name: String, host: uuid::Uuid, comment: String) -> AggregatedService {
+    pub fn new(
+        global_tags: Vec<String>,
+        local_tags: Vec<String>,
+        uuid: uuid::Uuid,
+        name: String,
+        host: uuid::Uuid,
+        comment: String,
+    ) -> AggregatedService {
         AggregatedService {
             global_tags,
             local_tags,
