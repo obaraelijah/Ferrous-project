@@ -21,7 +21,8 @@ export const AttackType = {
     BruteforceSubdomains: 'BruteforceSubdomains',
     TcpPortScan: 'TcpPortScan',
     QueryCertificateTransparency: 'QueryCertificateTransparency',
-    QueryUnhashed: 'QueryUnhashed'
+    QueryUnhashed: 'QueryUnhashed',
+    HostAlive: 'HostAlive'
 } as const;
 export type AttackType = typeof AttackType[keyof typeof AttackType];
 
