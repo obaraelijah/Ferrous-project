@@ -25,6 +25,7 @@ use chrono::{Datelike, Timelike};
 use clap::{ArgAction, Parser, Subcommand, ValueEnum};
 use dehashed_rs::SearchType;
 use ipnet::IpNet;
+use ipnetwork::IpNetwork;
 use itertools::Itertools;
 use log::{error, info, warn};
 use prost_types::Timestamp;
@@ -35,7 +36,7 @@ use tonic::transport::Endpoint;
 use trust_dns_resolver::Name;
 use uuid::Uuid;
 
-use crate::backlog::Backlog;
+use crate::backlog::start_backlog;
 use crate::config::{get_config, Config};
 use crate::modules::bruteforce_subdomains::{
     bruteforce_subdomains, BruteforceSubdomainResult, BruteforceSubdomainsSettings,
@@ -236,9 +237,8 @@ async fn main() -> Result<(), String> {
             let config = get_config(&cli.config_path)?;
             logging::setup_logging(&config.logging)?;
 
-            let backlog = Backlog {
-                db: get_db(&config).await?,
-            };
+            let db = get_db(&config).await?;
+            let backlog = start_backlog(db, &config.ferrous).await?;
 
             start_rpc_server(&config, backlog).await?;
         }
@@ -491,7 +491,10 @@ async fn main() -> Result<(), String> {
                             }
                             PortScanTechnique::Icmp => {
                                 let settings = IcmpScanSettings {
-                                    addresses,
+                                    addresses: addresses
+                                        .into_iter()
+                                        .map(|x| IpNetwork::from(x))
+                                        .collect(),
                                     timeout: Duration::from_millis(timeout as u64),
                                     concurrent_limit: u32::from(concurrent_limit),
                                 };

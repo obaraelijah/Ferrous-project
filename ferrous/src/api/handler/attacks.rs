@@ -7,12 +7,11 @@ use actix_toolbox::tb_middleware::Session;
 use actix_web::web::{Data, Json, Path, Query};
 use actix_web::{delete, get, post, HttpResponse};
 use chrono::{DateTime, Utc};
-use ipnet::IpNet;
 use ipnetwork::IpNetwork;
 use log::debug;
 use rorm::db::transaction::Transaction;
 use rorm::prelude::*;
-use rorm::{and, insert, query, Database};
+use rorm::{and, query, Database};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -25,9 +24,7 @@ use crate::api::handler::{
 };
 use crate::api::server::DehashedScheduler;
 use crate::chan::{RpcClients, WsManagerChan};
-use crate::models::{
-    Attack, AttackInsert, AttackType, TcpPortScanResult, Workspace, WorkspaceMember,
-};
+use crate::models::{Attack, AttackType, TcpPortScanResult, Workspace, WorkspaceMember};
 use crate::modules::attacks::AttackContext;
 use crate::rpc::rpc_definitions;
 use crate::rpc::rpc_definitions::CertificateTransparencyRequest;
@@ -78,16 +75,13 @@ pub async fn bruteforce_subdomains(
 
     let client = rpc_clients.get_leech(&leech_uuid)?;
 
-    let attack_uuid = insert!(db.as_ref(), AttackInsert)
-        .return_primary_key()
-        .single(&AttackInsert {
-            uuid: Uuid::new_v4(),
-            attack_type: AttackType::BruteforceSubdomains,
-            started_by: ForeignModelByField::Key(user_uuid),
-            workspace: ForeignModelByField::Key(workspace_uuid),
-            finished_at: None,
-        })
-        .await?;
+    let attack_uuid = Attack::insert(
+        db.as_ref(),
+        AttackType::BruteforceSubdomains,
+        user_uuid,
+        workspace_uuid,
+    )
+    .await?;
 
     // start attack
     tokio::spawn(
@@ -119,7 +113,7 @@ pub struct ScanTcpPortsRequest {
     pub(crate) targets: Vec<IpAddr>,
 
     #[schema(value_type = Vec<String>, example = json!(["10.13.37.252/30"]))]
-    pub(crate) exclude: Vec<IpNet>,
+    pub(crate) exclude: Vec<IpNetwork>,
 
     pub(crate) ports: Vec<PortOrRange>,
 
@@ -187,8 +181,8 @@ impl From<&PortOrRange> for rpc_definitions::PortOrRange {
 /// Host Alive check request
 #[derive(Deserialize, ToSchema)]
 pub struct HostsAliveRequest {
-    #[schema(value_type = Vec<String>, example = json!(["10.13.37.1", "10.13.37.2", "10.13.37.50"]))]
-    pub(crate) targets: Vec<IpAddr>,
+    #[schema(value_type = Vec<String>, example = json!(["10.13.37.1", "10.13.37.2", "10.13.37.0/24"]))]
+    pub(crate) targets: Vec<IpNetwork>,
 
     #[schema(example = 3000)]
     pub(crate) timeout: u64,
@@ -230,16 +224,13 @@ pub async fn hosts_alive_check(
         workspace_uuid,
     } = req.into_inner();
 
-    let attack_uuid = insert!(db.as_ref(), AttackInsert)
-        .return_primary_key()
-        .single(&AttackInsert {
-            uuid: Uuid::new_v4(),
-            attack_type: AttackType::BruteforceSubdomains,
-            started_by: ForeignModelByField::Key(user_uuid),
-            workspace: ForeignModelByField::Key(workspace_uuid),
-            finished_at: None,
-        })
-        .await?;
+    let attack_uuid = Attack::insert(
+        db.as_ref(),
+        AttackType::HostAlive,
+        user_uuid,
+        workspace_uuid,
+    )
+    .await?;
 
     let leech = rpc_clients.random_leech()?;
 
@@ -304,16 +295,13 @@ pub async fn scan_tcp_ports(
 
     let client = rpc_clients.get_leech(&leech_uuid)?;
 
-    let attack_uuid = insert!(db.as_ref(), AttackInsert)
-        .return_primary_key()
-        .single(&AttackInsert {
-            uuid: Uuid::new_v4(),
-            attack_type: AttackType::HostAlive,
-            started_by: ForeignModelByField::Key(user_uuid),
-            workspace: ForeignModelByField::Key(workspace_uuid),
-            finished_at: None,
-        })
-        .await?;
+    let attack_uuid = Attack::insert(
+        db.as_ref(),
+        AttackType::TcpPortScan,
+        user_uuid,
+        workspace_uuid,
+    )
+    .await?;
 
     // start attack
     tokio::spawn(
@@ -391,16 +379,13 @@ pub async fn query_certificate_transparency(
 
     let client = rpc_clients.random_leech()?;
 
-    let attack_uuid = insert!(db.as_ref(), AttackInsert)
-        .return_primary_key()
-        .single(&AttackInsert {
-            uuid: Uuid::new_v4(),
-            attack_type: AttackType::QueryCertificateTransparency,
-            started_by: ForeignModelByField::Key(user_uuid),
-            workspace: ForeignModelByField::Key(workspace_uuid),
-            finished_at: None,
-        })
-        .await?;
+    let attack_uuid = Attack::insert(
+        db.as_ref(),
+        AttackType::QueryCertificateTransparency,
+        user_uuid,
+        workspace_uuid,
+    )
+    .await?;
 
     tokio::spawn(
         AttackContext {
@@ -467,16 +452,13 @@ pub async fn query_dehashed(
         }
     };
 
-    let attack_uuid = insert!(db.as_ref(), AttackInsert)
-        .return_primary_key()
-        .single(&AttackInsert {
-            uuid: Uuid::new_v4(),
-            attack_type: AttackType::QueryUnhashed,
-            started_by: ForeignModelByField::Key(user_uuid),
-            workspace: ForeignModelByField::Key(workspace_uuid),
-            finished_at: None,
-        })
-        .await?;
+    let attack_uuid = Attack::insert(
+        db.as_ref(),
+        AttackType::QueryUnhashed,
+        user_uuid,
+        workspace_uuid,
+    )
+    .await?;
 
     tokio::spawn(
         AttackContext {
