@@ -5,6 +5,7 @@ use serde::Serialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
+pub(crate) use crate::models::aggregation::operations::*;
 use crate::models::{GlobalTag, Workspace, WorkspaceTag};
 
 mod operations;
