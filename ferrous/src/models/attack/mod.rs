@@ -283,14 +283,14 @@ pub struct HostAliveResult {
     /// The primary key
     #[rorm(primary_key)]
     pub uuid: Uuid,
-    
+
     /// The [attack](Attack) which produced this result
     pub attack: ForeignModel<Attack>,
-    
+
     /// The point in time, this result was produced
     #[rorm(auto_create_time)]
     pub created_at: DateTime<Utc>,
-    
+
     /// A host that responded
     pub host: IpNetwork,
 }
