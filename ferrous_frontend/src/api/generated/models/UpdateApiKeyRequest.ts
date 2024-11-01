@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * The request to update an api key
  * @export
  * @interface UpdateApiKeyRequest
  */
@@ -23,7 +23,7 @@ export interface UpdateApiKeyRequest {
      * @type {string}
      * @memberof UpdateApiKeyRequest
      */
-    name?: string | null;
+    name: string;
 }
 
 /**
@@ -31,6 +31,7 @@ export interface UpdateApiKeyRequest {
  */
 export function instanceOfUpdateApiKeyRequest(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "name" in value;
 
     return isInstance;
 }
@@ -45,7 +46,7 @@ export function UpdateApiKeyRequestFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
         
-        'name': !exists(json, 'name') ? undefined : json['name'],
+        'name': json['name'],
     };
 }
 

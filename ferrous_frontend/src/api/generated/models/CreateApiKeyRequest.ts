@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * Request to create a new api key
  * @export
  * @interface CreateApiKeyRequest
  */

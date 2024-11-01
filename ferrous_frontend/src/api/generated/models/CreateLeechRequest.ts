@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * The request to create a new leech
  * @export
  * @interface CreateLeechRequest
  */

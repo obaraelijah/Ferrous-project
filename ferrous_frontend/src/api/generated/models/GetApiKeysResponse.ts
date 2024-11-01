@@ -12,25 +12,25 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import type { SimpleApiKey } from './SimpleApiKey';
+import type { FullApiKey } from './FullApiKey';
 import {
-    SimpleApiKeyFromJSON,
-    SimpleApiKeyFromJSONTyped,
-    SimpleApiKeyToJSON,
-} from './SimpleApiKey';
+    FullApiKeyFromJSON,
+    FullApiKeyFromJSONTyped,
+    FullApiKeyToJSON,
+} from './FullApiKey';
 
 /**
- * 
+ * The response that contains all api keys
  * @export
  * @interface GetApiKeysResponse
  */
 export interface GetApiKeysResponse {
     /**
      * 
-     * @type {Array<SimpleApiKey>}
+     * @type {Array<FullApiKey>}
      * @memberof GetApiKeysResponse
      */
-    keys: Array<SimpleApiKey>;
+    keys: Array<FullApiKey>;
 }
 
 /**
@@ -53,7 +53,7 @@ export function GetApiKeysResponseFromJSONTyped(json: any, ignoreDiscriminator: 
     }
     return {
         
-        'keys': ((json['keys'] as Array<any>).map(SimpleApiKeyFromJSON)),
+        'keys': ((json['keys'] as Array<any>).map(FullApiKeyFromJSON)),
     };
 }
 
@@ -66,6 +66,6 @@ export function GetApiKeysResponseToJSON(value?: GetApiKeysResponse | null): any
     }
     return {
         
-        'keys': ((value.keys as Array<any>).map(SimpleApiKeyToJSON)),
+        'keys': ((value.keys as Array<any>).map(FullApiKeyToJSON)),
     };
 }

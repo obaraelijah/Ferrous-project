@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * The request to create a user
  * @export
  * @interface CreateUserRequest
  */

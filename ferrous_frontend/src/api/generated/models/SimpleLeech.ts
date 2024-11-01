@@ -13,51 +13,60 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * The request to create a new workspace
+ * T
  * @export
- * @interface CreateWorkspaceRequest
+ * @interface SimpleLeech
  */
-export interface CreateWorkspaceRequest {
+export interface SimpleLeech {
     /**
      * 
      * @type {string}
-     * @memberof CreateWorkspaceRequest
+     * @memberof SimpleLeech
+     */
+    uuid: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SimpleLeech
      */
     name: string;
     /**
      * 
      * @type {string}
-     * @memberof CreateWorkspaceRequest
+     * @memberof SimpleLeech
      */
-    description?: string | null;
+    address: string;
 }
 
 /**
- * Check if a given object implements the CreateWorkspaceRequest interface.
+ * Check if a given object implements the SimpleLeech interface.
  */
-export function instanceOfCreateWorkspaceRequest(value: object): boolean {
+export function instanceOfSimpleLeech(value: object): boolean {
     let isInstance = true;
+    isInstance = isInstance && "uuid" in value;
     isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "address" in value;
 
     return isInstance;
 }
 
-export function CreateWorkspaceRequestFromJSON(json: any): CreateWorkspaceRequest {
-    return CreateWorkspaceRequestFromJSONTyped(json, false);
+export function SimpleLeechFromJSON(json: any): SimpleLeech {
+    return SimpleLeechFromJSONTyped(json, false);
 }
 
-export function CreateWorkspaceRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CreateWorkspaceRequest {
+export function SimpleLeechFromJSONTyped(json: any, ignoreDiscriminator: boolean): SimpleLeech {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
-
+        
+        'uuid': json['uuid'],
         'name': json['name'],
-        'description': !exists(json, 'description') ? undefined : json['description'],
+        'address': json['address'],
     };
 }
 
-export function CreateWorkspaceRequestToJSON(value?: CreateWorkspaceRequest | null): any {
+export function SimpleLeechToJSON(value?: SimpleLeech | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -65,8 +74,9 @@ export function CreateWorkspaceRequestToJSON(value?: CreateWorkspaceRequest | nu
         return null;
     }
     return {
-
+        
+        'uuid': value.uuid,
         'name': value.name,
-        'description': value.description,
+        'address': value.address,
     };
 }
