@@ -30,7 +30,7 @@ export interface ScanTcpPortsRequest {
      * @type {string}
      * @memberof ScanTcpPortsRequest
      */
-    leechUuid: string;
+    leechUuid?: string | null;
     /**
      * 
      * @type {Array<string>}
@@ -92,7 +92,6 @@ export interface ScanTcpPortsRequest {
  */
 export function instanceOfScanTcpPortsRequest(value: object): boolean {
     let isInstance = true;
-    isInstance = isInstance && "leechUuid" in value;
     isInstance = isInstance && "targets" in value;
     isInstance = isInstance && "exclude" in value;
     isInstance = isInstance && "ports" in value;
@@ -116,7 +115,7 @@ export function ScanTcpPortsRequestFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
 
-        'leechUuid': json['leech_uuid'],
+        'leechUuid': !exists(json, 'leech_uuid') ? undefined : json['leech_uuid'],
         'targets': json['targets'],
         'exclude': json['exclude'],
         'ports': ((json['ports'] as Array<any>).map(PortOrRangeFromJSON)),
