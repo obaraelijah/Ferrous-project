@@ -95,32 +95,3 @@ export async function copyToClipboard(text: string | null) {
         }
     }
 }
-
-type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
-
-export function getOsIcon(os: OsType): React.ReactElement {
-    let IconComponent: IconComponent;
-
-    switch (os) {
-        case "Linux":
-            IconComponent = TuxIcon;
-            break;
-        case "Apple":
-            IconComponent = AppleIcon;
-            break;
-        case "Windows":
-            IconComponent = WindowsIcon;
-            break;
-        case "FreeBSD":
-            IconComponent = FreeBSDIcon;
-            break;
-        case "Android":
-            IconComponent = AndroidIcon;
-            break;
-        case "Unknown":
-        default:
-            IconComponent = AnonymousIcon;
-    }
-
-    return React.createElement(IconComponent);
-}
