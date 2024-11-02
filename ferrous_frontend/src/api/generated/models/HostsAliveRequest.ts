@@ -20,6 +20,12 @@ import { exists, mapValues } from '../runtime';
 export interface HostsAliveRequest {
     /**
      * 
+     * @type {string}
+     * @memberof HostsAliveRequest
+     */
+    leechUuid?: string | null;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof HostsAliveRequest
      */
@@ -67,6 +73,7 @@ export function HostsAliveRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
         
+        'leechUuid': !exists(json, 'leech_uuid') ? undefined : json['leech_uuid'],
         'targets': json['targets'],
         'timeout': json['timeout'],
         'concurrentLimit': json['concurrent_limit'],
@@ -83,6 +90,7 @@ export function HostsAliveRequestToJSON(value?: HostsAliveRequest | null): any {
     }
     return {
         
+        'leech_uuid': value.leechUuid,
         'targets': value.targets,
         'timeout': value.timeout,
         'concurrent_limit': value.concurrentLimit,
