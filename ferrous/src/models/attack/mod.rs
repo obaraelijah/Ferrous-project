@@ -7,7 +7,12 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::models::{User, Workspace};
+pub use crate::models::attack::operations::*;
+pub(crate) use crate::models::attack::patches::*;
+use crate::models::{Certainty, User, Workspace};
+
+mod operations;
+mod patches;
 
 /// The type of an attack
 #[derive(Copy, Clone, DbEnum, ToSchema, Serialize, Deserialize)]
@@ -24,6 +29,8 @@ pub enum AttackType {
     QueryUnhashed,
     /// Check if a host is reachable via icmp
     HostAlive,
+    /// Detect the service that is running on a port
+    ServiceDetection,
 }
 
 /// Representation of an attack
@@ -49,16 +56,6 @@ pub struct Attack {
     /// The point in time, this attack was created
     #[rorm(auto_create_time)]
     pub created_at: DateTime<Utc>,
-}
-
-#[derive(Patch)]
-#[rorm(model = "Attack")]
-pub(crate) struct AttackInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) attack_type: AttackType,
-    pub(crate) started_by: ForeignModel<User>,
-    pub(crate) workspace: ForeignModel<Workspace>,
-    pub(crate) finished_at: Option<DateTime<Utc>>,
 }
 
 /// The type of DNS Record
@@ -98,16 +95,6 @@ pub struct BruteforceSubdomainsResult {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Patch)]
-#[rorm(model = "BruteforceSubdomainsResult")]
-pub(crate) struct BruteforceSubdomainsResultInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) attack: ForeignModel<Attack>,
-    pub(crate) source: String,
-    pub(crate) destination: String,
-    pub(crate) dns_record_type: DnsRecordType,
-}
-
 /// Representation of a [tcp port scan](AttackType::TcpPortScan) attack's result
 #[derive(Model)]
 pub struct TcpPortScanResult {
@@ -130,15 +117,6 @@ pub struct TcpPortScanResult {
     ///
     /// Stored in db as `i32` but ports are actually just an `u16`
     pub port: i32,
-}
-
-#[derive(Patch)]
-#[rorm(model = "TcpPortScanResult")]
-pub(crate) struct TcpPortScanResultInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) attack: ForeignModel<Attack>,
-    pub(crate) address: IpNetwork,
-    pub(crate) port: i32,
 }
 
 /// Representation of a [dehashed query](AttackType::Dehashed) result
@@ -190,24 +168,6 @@ pub struct DehashedQueryResult {
     pub database_name: Option<String>,
 }
 
-#[derive(Patch)]
-#[rorm(model = "DehashedQueryResult")]
-pub(crate) struct DehashedQueryResultInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) attack: ForeignModel<Attack>,
-    pub(crate) dehashed_id: i64,
-    pub(crate) email: Option<String>,
-    pub(crate) username: Option<String>,
-    pub(crate) password: Option<String>,
-    pub(crate) hashed_password: Option<String>,
-    pub(crate) ip_address: Option<IpNetwork>,
-    pub(crate) name: Option<String>,
-    pub(crate) vin: Option<String>,
-    pub(crate) address: Option<String>,
-    pub(crate) phone: Option<String>,
-    pub(crate) database_name: Option<String>,
-}
-
 /// A value name in a [AttackType::QueryCertificateTransparency] result
 #[derive(Model)]
 pub struct CertificateTransparencyValueName {
@@ -222,14 +182,6 @@ pub struct CertificateTransparencyValueName {
     /// The result this value is originating from
     #[rorm(on_update = "Cascade", on_delete = "Cascade")]
     pub ct_result: ForeignModel<CertificateTransparencyResult>,
-}
-
-#[derive(Patch)]
-#[rorm(model = "CertificateTransparencyValueName")]
-pub(crate) struct CertificateTransparencyValueNameInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) value_name: String,
-    pub(crate) ct_result: ForeignModel<CertificateTransparencyResult>,
 }
 
 /// Representation of a [AttackType::QueryCertificateTransparency] result
@@ -264,19 +216,6 @@ pub struct CertificateTransparencyResult {
     pub serial_number: String,
 }
 
-#[derive(Patch)]
-#[rorm(model = "CertificateTransparencyResult")]
-pub(crate) struct CertificateTransparencyResultInsert {
-    pub(crate) uuid: Uuid,
-    pub(crate) attack: ForeignModel<Attack>,
-    pub(crate) created_at: DateTime<Utc>,
-    pub(crate) issuer_name: String,
-    pub(crate) common_name: String,
-    pub(crate) not_before: Option<DateTime<Utc>>,
-    pub(crate) not_after: Option<DateTime<Utc>>,
-    pub(crate) serial_number: String,
-}
-
 /// Representation of a [Host Alive](AttackType::HostAlive) attack's result
 #[derive(Model)]
 pub struct HostAliveResult {
@@ -293,4 +232,49 @@ pub struct HostAliveResult {
 
     /// A host that responded
     pub host: IpNetwork,
+}
+
+/// The name of a result of a service that was found during a service detection
+#[derive(Model)]
+pub struct ServiceDetectionName {
+    /// The primary key
+    #[rorm(primary_key)]
+    pub uuid: Uuid,
+
+    /// The name of found service
+    #[rorm(max_length = 255)]
+    pub name: String,
+
+    /// The result this service name is linked to
+    #[rorm(on_update = "Cascade", on_delete = "Cascade")]
+    pub result: ForeignModel<ServiceDetectionResult>,
+}
+
+/// Representation of a [Service Detection](AttackType::ServiceDetection) attack's result
+#[derive(Model)]
+pub struct ServiceDetectionResult {
+    /// The primary key
+    #[rorm(primary_key)]
+    pub uuid: Uuid,
+
+    /// The [attack](Attack) which produced this result
+    pub attack: ForeignModel<Attack>,
+
+    /// The point in time, this result was produced
+    #[rorm(auto_create_time)]
+    pub created_at: DateTime<Utc>,
+
+    /// The certainty of the result
+    pub certainty: Certainty,
+
+    /// The ip address a port was found on
+    pub host: IpNetwork,
+
+    /// Port number
+    ///
+    /// Reinterpret as u16 with to_ne_bytes and from_ne_bytes
+    pub port: i16,
+
+    /// The found names of the service
+    pub service_names: BackRef<field!(ServiceDetectionName::F.result)>,
 }
