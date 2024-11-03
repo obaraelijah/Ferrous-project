@@ -20,7 +20,7 @@ import {
 } from './GetUser';
 
 /**
- * 
+ * The response of all users
  * @export
  * @interface GetUserResponse
  */

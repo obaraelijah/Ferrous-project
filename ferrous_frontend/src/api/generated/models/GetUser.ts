@@ -13,7 +13,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * A single user representation
  * @export
  * @interface GetUser
  */

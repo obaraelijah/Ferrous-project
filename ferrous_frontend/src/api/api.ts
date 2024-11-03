@@ -144,6 +144,7 @@ export const Api = {
         setPassword: (currentPassword: string, newPassword: string) =>
             handleError(userManagement.setPassword({ setPasswordRequest: { currentPassword, newPassword } })),
     },
+    all: () => handleError(userManagement.getAllUsers()),
     apiKeys: {
         create: (name: string) => handleError(apiKeys.createApiKey({ createApiKeyRequest: { name } })),
         all: () => handleError(apiKeys.getApiKeys()),

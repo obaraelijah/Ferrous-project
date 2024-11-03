@@ -13,7 +13,9 @@
 
 import { exists, mapValues } from '../runtime';
 /**
+ * The request to update the own user
  * 
+ *  At least one of the options must be set
  * @export
  * @interface UpdateMeRequest
  */
