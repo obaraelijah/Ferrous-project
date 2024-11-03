@@ -18,8 +18,8 @@ theme:
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to light mode
-repo_url: https://github.com/myOmikron/ferrous-project
-repo_name: myOmikron/ferrous-project
+repo_url: https://github.com/obaraelijah/ferrous-project
+repo_name: obaraelijah/ferrous-project
 markdown_extensions:
   - admonition
   - attr_list
