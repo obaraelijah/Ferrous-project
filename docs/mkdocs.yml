@@ -2,10 +2,12 @@ site_name: ferrous Project
 site_url: "https://ferrous-project.org/"
 theme:
   name: material
+  custom_dir: overrides
   features:
     - content.tabs.link
     - content.code.annotate
   palette:
+    - primary: black
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
