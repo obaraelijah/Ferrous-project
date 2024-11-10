@@ -11,6 +11,7 @@ pub use crate::models::attack::operations::*;
 pub(crate) use crate::models::attack::patches::*;
 use crate::models::{Certainty, User, Workspace};
 
+mod operations;
 mod patches;
 
 /// The type of an attack
@@ -51,6 +52,10 @@ pub struct Attack {
 
     /// The point in time, this attack has finished
     pub finished_at: Option<DateTime<Utc>>,
+
+    /// Contains an error message if the attack didn't finish successfully
+    #[rorm(max_length = 255)]
+    pub error: Option<String>,
 
     /// The point in time, this attack was created
     #[rorm(auto_create_time)]
