@@ -1,14 +1,18 @@
-site_name: ferrous Project
+site_name: ferrous Project Documentation
 site_url: "https://ferrous-project.org/"
 theme:
   name: material
+  logo: "assets/ferrous_logo.png"
+  favicon: "assets/favicon.svg"
+  icon:
+    repo: "fontawesome/brands/github"
   custom_dir: overrides
   features:
     - content.tabs.link
     - content.code.annotate
   palette:
-    primary: black
     scheme: slate
+    primary: black
 repo_url: https://github.com/myOmikron/ferrous-project
 repo_name: myOmikron/ferrous-project
 markdown_extensions:
