@@ -7,22 +7,10 @@ theme:
     - content.tabs.link
     - content.code.annotate
   palette:
-    - primary: black
-    # Palette toggle for light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to dark mode
-
-    # Palette toggle for dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to light mode
-repo_url: https://github.com/obaraelijah/ferrous-project
-repo_name: obaraelijah/ferrous-project
+    primary: black
+    scheme: slate
+repo_url: https://github.com/myOmikron/ferrous-project
+repo_name: myOmikron/ferrous-project
 markdown_extensions:
   - admonition
   - attr_list
