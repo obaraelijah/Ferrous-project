@@ -11,7 +11,6 @@ pub use crate::models::attack::operations::*;
 pub(crate) use crate::models::attack::patches::*;
 use crate::models::{Certainty, User, Workspace};
 
-mod operations;
 mod patches;
 
 /// The type of an attack
