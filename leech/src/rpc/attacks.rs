@@ -39,7 +39,7 @@ pub struct Attacks {
 #[tonic::async_trait]
 impl ReqAttackService for Attacks {
     type BruteforceSubdomainsStream =
-    Pin<Box<dyn Stream<Item = Result<BruteforceSubdomainResponse, Status>> + Send>>;
+        Pin<Box<dyn Stream<Item = Result<BruteforceSubdomainResponse, Status>> + Send>>;
 
     async fn bruteforce_subdomains(
         &self,

@@ -1,8 +1,8 @@
 use ipnetwork::IpNetwork;
 use rorm::prelude::{BackRef, ForeignModel};
 use rorm::{field, DbEnum, Model};
-use serde::{Deserialize, Serialize};
 use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -123,7 +123,7 @@ pub struct Service {
 
     /// The certainty the service is detected correct
     pub certainty: Certainty,
-    
+
     /// The host this service is attached to
     #[rorm(on_delete = "Cascade", on_update = "Cascade")]
     pub host: ForeignModel<Host>,
