@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import StartAttack from "../components/start-attack";
 import "../../../styling/workspace-attacks-bsd.css";
 import Select from "react-select";
+import SelectMenu from "../../../components/select-menu";
 
 type WorkspaceAttacksBruteforceSubdomainsProps = {
     workspaceUuid: UUID;
@@ -15,6 +16,7 @@ type WorkspaceAttacksBruteforceSubdomainsProps = {
 type WorkspaceAttacksBruteforceSubdomainsState = {
     domain: string;
     taskLimit: number;
+    wordlist: null | WordlistEntry;
 
     wordlists: Array<WordlistEntry>;
 
@@ -35,6 +37,7 @@ export default class WorkspaceAttacksBruteforceSubdomains extends React.Componen
             domain: "",
             taskLimit: 1000,
             wordlists: [],
+            wordlist: null,
         };
     }
 
@@ -68,7 +71,15 @@ export default class WorkspaceAttacksBruteforceSubdomains extends React.Componen
                     <label htmlFor={"domain"}>Domain</label>
                     <Input id={"domain"} value={this.state.domain} onChange={(v) => this.setState({ domain: v })} />
                     <label htmlFor={"wordlist"}>Wordlist</label>
-                    <Select id={"wordlist"} options={this.state.wordlists} />
+                    <SelectMenu
+                        id={"wordlist"}
+                        options={this.state.wordlists}
+                        theme={"default"}
+                        value={this.state.wordlist}
+                        onChange={(wordlist) => {
+                            this.setState({ wordlist });
+                        }}
+                    />
                     <span
                         className={"neon workspace-attacks-bsd-advanced-button"}
                         onClick={() => {
