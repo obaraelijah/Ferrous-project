@@ -215,7 +215,7 @@ impl Host {
     ) -> Result<bool, rorm::Error> {
         let mut guard = executor.ensure_transaction().await?;
         let tx = guard.get_transaction();
-        
+
         let inserted = if query!(&mut *tx, (Host::F.uuid,))
             .condition(and![
                 Host::F.workspace.equals(workspace),
@@ -240,7 +240,7 @@ impl Host {
                 .await?;
             true
         };
-        
+
         guard.commit().await?;
         Ok(inserted)
     }
