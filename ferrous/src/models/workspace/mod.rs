@@ -31,7 +31,6 @@ pub struct WorkspaceMember {
     pub created_at: DateTime<Utc>,
 }
 
-
 /// Representation of a set of connected data.
 ///
 /// Workspaces are owned by a user and can be shared with others.

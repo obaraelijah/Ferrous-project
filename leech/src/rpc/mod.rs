@@ -200,7 +200,7 @@ pub mod rpc_attacks {
             }
         }
     }
-    
+
     impl From<Address> for IpAddr {
         fn from(value: Address) -> Self {
             let Address { address } = value;
