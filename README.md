@@ -1,4 +1,4 @@
-![ferrous](./assets/ferrous.png)
+![ferrous](assets/ferrous.png)
 
 ---
 
