@@ -100,6 +100,10 @@ impl ReqAttackService for Attacks {
             }
         }
 
+        if port_range.is_empty() {
+            port_range.extend(1..=u16::MAX);
+        }
+        
         let settings = TcpPortScannerSettings {
             addresses: req.targets.into_iter().map(|addr| addr.into()).collect(),
             port_range,
